@@ -75,7 +75,7 @@ async function main() {
   // 3. Prepare data for CSV
   const qrDataList = tokens.map((token, index) => {
     const serialNo = String(index + 1).padStart(3, "0"); // 001, 002, ...
-    const qrUrl = `${BASE_URL}${token}`;
+    const qrUrl = token; // Just encode the ID directly
     const filename = `${serialNo}_${token}.png`;
     return {
       serial_no: serialNo,
@@ -193,11 +193,11 @@ Each QR image is named:
 
 ## 🔗 QR Content
 
-Each QR encodes a URL like:
+Each QR directly encodes its unique ID:
 \`\`\`
-https://shaurya.iitkgp.ac.in/ticket/SH26-X82KD92L
+SH26-X82KD92L
 \`\`\`
-This URL contains **NO personal data** — only a random token.
+This string contains **NO personal data** — only a random token.
 `;
 
   fs.writeFileSync(path.join(OUTPUT_DIR, "README.md"), readmeContent);

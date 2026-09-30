@@ -160,17 +160,17 @@ export default function VolunteerDashboard() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', width: '100%', padding: '24px', background: '#fafafa', fontFamily: 'Inter, sans-serif' }}>
+    <div className="min-h-screen w-full bg-[#fafafa] p-4 sm:p-6 box-border overflow-x-hidden" style={{ fontFamily: 'Inter, sans-serif' }}>
       
       {/* Header */}
-      <div style={{ maxWidth: '600px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ width: '40px', height: '40px', background: '#fff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 10px rgba(249,115,22,0.1)' }}>
-            <img src="/shaurya-logo.png" alt="Logo" style={{ width: '24px' }} />
+      <div className="max-w-[600px] mx-auto flex flex-row justify-between items-center mb-6 sm:mb-8 gap-2">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm shrink-0">
+            <img src="/shaurya-logo.png" alt="Logo" className="w-6" />
           </div>
-          <h2 style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 800, margin: 0, color: '#1f2937', fontSize: '18px' }}>VOLUNTEER DASHBOARD</h2>
+          <h2 className="font-['Outfit'] font-extrabold m-0 text-gray-800 text-[15px] sm:text-[18px]">VOLUNTEER DASHBOARD</h2>
         </div>
-        <button onClick={handleLogout} style={{ background: 'transparent', border: '1px solid #e5e7eb', padding: '8px 16px', borderRadius: '20px', cursor: 'pointer', fontSize: '13px', fontWeight: 600, color: '#4b5563' }}>
+        <button onClick={handleLogout} className="shrink-0 bg-transparent border border-gray-200 py-1.5 px-3 sm:px-4 rounded-full cursor-pointer text-xs sm:text-sm font-semibold text-gray-600 hover:bg-gray-50">
           Logout
         </button>
       </div>
@@ -179,20 +179,20 @@ export default function VolunteerDashboard() {
       <div style={{ maxWidth: '600px', margin: '0 auto' }}>
         
         {/* Search Box */}
-        <div style={{ background: '#fff', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', marginBottom: '24px' }}>
-          <h3 style={{ margin: '0 0 16px 0', color: '#1f2937', fontSize: '16px', fontWeight: 600 }}>Search Participant</h3>
-          <form onSubmit={handleSearch} style={{ display: 'flex', gap: '12px' }}>
+        <div className="bg-white p-5 sm:p-6 rounded-2xl shadow-sm mb-6">
+          <h3 className="m-0 mb-4 text-gray-800 text-base font-semibold">Search Participant</h3>
+          <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3">
             <input 
               type="text" 
               placeholder="Enter Mobile or Email"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              style={{ flex: 1, padding: '12px 16px', borderRadius: '12px', border: '1px solid #f3f4f6', background: '#fcfcfc', fontSize: '14px', outline: 'none' }}
+              className="flex-1 p-3 rounded-xl border border-gray-100 bg-[#fcfcfc] text-sm outline-none focus:border-orange-500 focus:bg-white transition-colors"
               required
             />
             <button 
               type="submit" 
-              style={{ background: 'linear-gradient(to right, #f97316, #d946ef)', color: '#fff', border: 'none', padding: '0 24px', borderRadius: '12px', fontWeight: 600, cursor: 'pointer' }}
+              className="bg-gradient-to-r from-orange-500 to-fuchsia-500 text-white border-none py-3 px-6 rounded-xl font-semibold cursor-pointer shrink-0 hover:shadow-md transition-shadow"
             >
               {isSearching ? 'Searching...' : 'Search'}
             </button>
@@ -207,24 +207,19 @@ export default function VolunteerDashboard() {
 
         {/* Search Result Card */}
         {userResult && (
-          <div style={{ background: '#fff', padding: '24px', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', animation: 'fadeIn 0.3s ease' }}>
+          <div className="bg-white p-5 sm:p-6 rounded-2xl shadow-sm animate-[fadeIn_0.3s_ease]">
             
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid #f3f4f6', paddingBottom: '16px', marginBottom: '16px' }}>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-gray-100 pb-4 mb-4 gap-3">
               <div>
-                <h3 style={{ margin: '0 0 4px 0', color: '#1f2937', fontSize: '20px', fontWeight: 700 }}>{userResult.name}</h3>
-                <p style={{ margin: 0, color: '#6b7280', fontSize: '14px' }}>{userResult.college}</p>
+                <h3 className="m-0 mb-1 text-gray-800 text-lg sm:text-xl font-bold">{userResult.name}</h3>
+                <p className="m-0 text-gray-500 text-sm">{userResult.college}</p>
               </div>
-              <div style={{ textAlign: 'right' }}>
-                <span style={{ 
-                  display: 'inline-block',
-                  background: userResult.status === 'ASSIGNED' ? '#dcfce7' : '#fef9c3', 
-                  color: userResult.status === 'ASSIGNED' ? '#166534' : '#854d0e',
-                  padding: '6px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 700 
-                }}>
+              <div className="text-left sm:text-right">
+                <span className={`inline-block px-3 py-1.5 rounded-full text-xs font-bold ${userResult.status === 'ASSIGNED' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
                   {userResult.status}
                 </span>
                 {userResult.status === 'ASSIGNED' && userResult.qr_id && (
-                  <div style={{ marginTop: '8px', fontSize: '11px', color: '#6b7280', fontWeight: 600, background: '#f3f4f6', padding: '4px 8px', borderRadius: '6px', fontFamily: 'monospace' }}>
+                  <div className="mt-2 text-[11px] text-gray-500 font-semibold bg-gray-100 px-2 py-1 rounded-md font-mono inline-block">
                     ID: {userResult.qr_id}
                   </div>
                 )}
@@ -292,27 +287,31 @@ export default function VolunteerDashboard() {
                   <p style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#6b7280', fontWeight: 500 }}>
                     {qrToken ? "Scanned Successfully! Verify Token:" : "Or enter token manually (SH26-XXX):"}
                   </p>
-                  <div style={{ display: 'flex', gap: '8px' }}>
+                  <div className="flex flex-col gap-3">
                     <input 
                       type="text" 
                       placeholder="SH26-XXXXXXXX"
                       value={qrToken}
                       onChange={(e) => setQrToken(e.target.value.toUpperCase())}
-                      style={{ flex: 1, padding: '12px 14px', borderRadius: '8px', border: '1px solid #d1d5db', textTransform: 'uppercase', fontSize: '15px', fontWeight: 600, outline: 'none' }}
+                      className="w-full box-border p-3 px-3.5 rounded-lg border border-gray-300 uppercase text-[15px] font-semibold outline-none"
                       autoFocus={!!qrToken}
                     />
-                    <button 
-                      onClick={() => { setQrToken(''); setAssignError(''); }}
-                      style={{ background: '#6b7280', color: '#fff', border: 'none', padding: '0 16px', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', fontSize: '14px' }}
-                    >
-                      Rescan
-                    </button>
-                    <button 
-                      onClick={handleConfirmAssignment}
-                      style={{ background: '#22c55e', color: '#fff', border: 'none', padding: '0 20px', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}
-                    >
-                      Confirm
-                    </button>
+                    
+                    <div className="grid grid-cols-2 gap-2">
+                      <button 
+                        onClick={() => { setQrToken(''); setAssignError(''); }}
+                        className="min-h-[44px] bg-gray-500 text-white border-none rounded-lg font-semibold cursor-pointer text-sm hover:bg-gray-600 transition-colors"
+                      >
+                        Rescan
+                      </button>
+                      
+                      <button 
+                        onClick={handleConfirmAssignment}
+                        className="min-h-[44px] bg-green-500 text-white border-none rounded-lg font-bold cursor-pointer text-sm hover:bg-green-600 transition-colors"
+                      >
+                        Confirm
+                      </button>
+                    </div>
                   </div>
                   
                   {assignError && (

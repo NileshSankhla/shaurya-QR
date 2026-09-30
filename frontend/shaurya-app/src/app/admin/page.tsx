@@ -37,8 +37,8 @@ export default function AdminDashboard() {
     const users = u.data || [], qrs = q.data || [];
     setStats({ totalUsers: users.length, assignedUsers: users.filter(x => x.status === 'ASSIGNED').length, unassignedUsers: users.filter(x => x.status === 'UNASSIGNED').length, totalQR: qrs.length, availableQR: qrs.filter(x => x.status === 'AVAILABLE').length, assignedQR: qrs.filter(x => x.status === 'ASSIGNED').length });
   };
-  const loadLogs = async () => { const { data } = await supabase.from('activity_logs').select('*').order('created_at', { ascending: false }).limit(100); setLogs(data || []); };
-  const loadVolunteers = async () => { const { data } = await supabase.from('volunteers').select('*').order('created_at', { ascending: true }); setVolunteers(data || []); };
+  const loadLogs = async () => { setIsLoading(true); const { data } = await supabase.from('activity_logs').select('*').order('created_at', { ascending: false }).limit(100); setLogs(data || []); setIsLoading(false); };
+  const loadVolunteers = async () => { setIsLoading(true); const { data } = await supabase.from('volunteers').select('*').order('created_at', { ascending: true }); setVolunteers(data || []); setIsLoading(false); };
   const toggleVol = async (id: string, active: boolean) => { await supabase.from('volunteers').update({ active: !active }).eq('id', id); loadVolunteers(); };
 
   const handleLogout = () => {
@@ -73,11 +73,11 @@ export default function AdminDashboard() {
         .admin-loading p { color:#9ca3af; font-size:14px; }
         @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.95)} }
 
-        .admin-wrap { min-height:100vh; background:linear-gradient(160deg,#fdf6f0 0%,#fef5f0 50%,#faf5ff 100%); font-family:Inter,sans-serif; }
+        .admin-wrap { min-height:100vh; background:linear-gradient(160deg,#fdf6f0 0%,#fef5f0 50%,#faf5ff 100%); font-family:Inter,sans-serif; overflow-x:hidden; width:100%; }
 
         /* Header */
-        .admin-header { background:rgba(255,255,255,.88); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); border-bottom:1px solid rgba(249,115,22,.08); padding:12px 16px; position:sticky; top:0; z-index:50; }
-        .admin-header-inner { max-width:960px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; }
+        .admin-header { background:rgba(255,255,255,.88); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); border-bottom:1px solid rgba(249,115,22,.08); padding:12px 16px; position:sticky; top:0; z-index:50; width:100%; }
+        .admin-header-inner { max-width:960px; margin:0 auto; display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:8px; }
         .admin-brand { display:flex; align-items:center; gap:10px; }
         .admin-brand-icon { width:36px; height:36px; background:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(249,115,22,.12); flex-shrink:0; }
         .admin-brand-icon img { width:22px; height:22px; object-fit:contain; }
@@ -88,9 +88,9 @@ export default function AdminDashboard() {
         .btn-logout { background:#fef2f2; color:#ef4444; border:none; padding:7px 14px; border-radius:20px; font-size:11px; font-weight:700; cursor:pointer; }
 
         /* Tabs */
-        .admin-tabs { background:rgba(255,255,255,.6); backdrop-filter:blur(8px); border-bottom:1px solid rgba(0,0,0,.04); overflow-x:auto; -webkit-overflow-scrolling:touch; }
-        .admin-tabs-inner { max-width:960px; margin:0 auto; display:flex; padding:0 8px; }
-        .tab-btn { padding:13px 20px; border:none; background:transparent; cursor:pointer; font-size:13px; font-weight:500; color:#9ca3af; border-bottom:2.5px solid transparent; transition:all .2s; white-space:nowrap; font-family:Inter,sans-serif; }
+        .admin-tabs { background:rgba(255,255,255,.6); backdrop-filter:blur(8px); border-bottom:1px solid rgba(0,0,0,.04); overflow-x:auto; -webkit-overflow-scrolling:touch; width:100%; }
+        .admin-tabs-inner { max-width:960px; margin:0 auto; display:flex; padding:0 8px; width:max-content; }
+        .tab-btn { padding:13px 16px; border:none; background:transparent; cursor:pointer; font-size:13px; font-weight:500; color:#9ca3af; border-bottom:2.5px solid transparent; transition:all .2s; white-space:nowrap; font-family:Inter,sans-serif; }
         .tab-btn.active { font-weight:700; color:#f97316; border-bottom-color:#f97316; }
 
         /* Content */
@@ -112,7 +112,7 @@ export default function AdminDashboard() {
         .progress-labels { display:flex; justify-content:space-between; margin-top:8px; font-size:11px; color:#9ca3af; }
 
         /* Two columns on desktop */
-        .two-col { display:grid; grid-template-columns:1fr; gap:12px; }
+        .two-col { display:grid; grid-template-columns:1fr; gap:12px; width:100%; box-sizing:border-box; }
 
         /* White cards */
         .white-card { background:#fff; border-radius:16px; padding:18px 16px; box-shadow:0 1px 4px rgba(0,0,0,.04); }
@@ -141,7 +141,7 @@ export default function AdminDashboard() {
         .log-card .info .name { margin:0 0 3px; font-size:13px; color:#1f2937; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
         .log-card .info .detail { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
         .log-card .info .detail .by { font-size:11px; color:#9ca3af; }
-        .log-card .info .detail .token-badge { font-size:10px; font-family:monospace; color:#f97316; background:#fff7ed; padding:2px 6px; border-radius:4px; font-weight:600; }
+        .log-card .info .detail .token-badge { font-size:10px; font-family:monospace; color:#f97316; background:#fff7ed; padding:2px 6px; border-radius:4px; font-weight:600; word-break:break-all; }
         .log-card .time { font-size:11px; color:#d1d5db; white-space:nowrap; flex-shrink:0; }
 
         /* Vol card */
@@ -158,7 +158,10 @@ export default function AdminDashboard() {
         .btn-disabled { background:#fef2f2; color:#dc2626; }
 
         /* Refresh btn */
-        .btn-refresh { background:#fff; border:1px solid #f3f4f6; color:#6b7280; padding:8px 24px; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; box-shadow:0 1px 2px rgba(0,0,0,.04); }
+        .btn-refresh { background:#fff; border:1px solid #f3f4f6; color:#6b7280; padding:8px 24px; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; box-shadow:0 1px 2px rgba(0,0,0,.04); transition:all .2s ease; }
+        .btn-refresh:hover { background:#f9fafb; color:#1f2937; border-color:#e5e7eb; box-shadow:0 3px 6px rgba(0,0,0,.06); transform:translateY(-1px); }
+        .btn-refresh:active { transform:translateY(1px); box-shadow:none; }
+        .btn-refresh:disabled { opacity:0.6; cursor:not-allowed; transform:none; }
         .section-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
         .section-header h2 { margin:0; font-size:16px; font-weight:800; color:#1f2937; }
         .section-header h2 span { color:#d1d5db; font-weight:400; font-size:13px; }
@@ -283,7 +286,7 @@ export default function AdminDashboard() {
               </div>
 
               <div style={{ textAlign: 'center', marginTop: '20px' }}>
-                <button className="btn-refresh" onClick={loadAll}>{isLoading ? 'Refreshing...' : '↻ Refresh'}</button>
+                <button className="btn-refresh" onClick={loadAll} disabled={isLoading}>{isLoading ? 'Refreshing...' : '↻ Refresh'}</button>
               </div>
             </>
           )}
@@ -293,7 +296,7 @@ export default function AdminDashboard() {
             <>
               <div className="section-header">
                 <h2>Activity Log <span>({logs.length})</span></h2>
-                <button className="btn-refresh" onClick={loadLogs}>↻ Refresh</button>
+                <button className="btn-refresh" onClick={loadLogs} disabled={isLoading}>{isLoading ? 'Refreshing...' : '↻ Refresh'}</button>
               </div>
               {logs.length === 0 ? (
                 <div className="empty-state">No assignments recorded yet.</div>
@@ -321,7 +324,7 @@ export default function AdminDashboard() {
             <>
               <div className="section-header">
                 <h2>Volunteers</h2>
-                <button className="btn-refresh" onClick={loadVolunteers}>↻ Refresh</button>
+                <button className="btn-refresh" onClick={loadVolunteers} disabled={isLoading}>{isLoading ? 'Refreshing...' : '↻ Refresh'}</button>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {volunteers.map(vol => (

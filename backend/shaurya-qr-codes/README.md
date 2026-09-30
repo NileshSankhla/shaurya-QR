@@ -1,5 +1,5 @@
 # 🏗️ Shaurya IIT KGP — QR Codes
-## Generated: 4/9/2026, 4:36:44 pm
+## Generated: 30/9/2026, 12:07:14 pm
 
 ---
 
@@ -64,8 +64,8 @@ Each QR image is named:
 
 ## 🔗 QR Content
 
-Each QR encodes a URL like:
+Each QR directly encodes its unique ID:
 ```
-https://shaurya.iitkgp.ac.in/ticket/SH26-X82KD92L
+SH26-X82KD92L
 ```
-This URL contains **NO personal data** — only a random token.
+This string contains **NO personal data** — only a random token.

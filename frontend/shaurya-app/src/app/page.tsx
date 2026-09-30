@@ -111,7 +111,8 @@ export default function RegistrationPage() {
   };
 
   return (
-    <div className="register-container">
+    <div className="min-h-screen w-full flex items-center justify-center p-5 bg-[radial-gradient(circle_at_center,_#fff4ed_0%,_#fef2f2_30%,_#fafafa_80%)] font-['Inter',sans-serif]">
+      <div className="register-container">
       {!isSuccess ? (
         <div id="formSection" style={{ width: '100%' }}>
           <div className="logo-wrapper">
@@ -238,6 +239,7 @@ export default function RegistrationPage() {
           </p>
         </div>
       )}
+      </div>
     </div>
   );
 }
