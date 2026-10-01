@@ -269,7 +269,7 @@ export default function VolunteerDashboard() {
                           }
                         }}
                         components={{
-                          audio: true,
+                          
                           onOff: false,
                           torch: true,
                           zoom: false,
