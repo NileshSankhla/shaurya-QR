@@ -1,0 +1,12 @@
+{
+  "name": "shaurya-qr-ecosystem",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix apps/unified-platform run dev",
+    "dev:https": "npm --prefix apps/unified-platform run dev:https",
+    "build": "npm --prefix apps/unified-platform run build",
+    "lint": "npm --prefix apps/unified-platform run lint",
+    "typecheck": "npm --prefix apps/unified-platform run typecheck",
+    "verify": "npm run typecheck && npm run lint && npm run build"
+  }
+}
