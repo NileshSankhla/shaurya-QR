@@ -193,6 +193,18 @@
       margin-top: 4px;
       padding-left: 8px;
     }
+
+    .server-error {
+      display: none;
+      margin: 0 0 12px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: #fef2f2;
+      color: #b91c1c;
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.45;
+    }
     
     .form-group.error .form-input {
       border-color: var(--error);
@@ -368,6 +380,7 @@
           <div class="error-text">Please enter a valid email</div>
         </div>
 
+        <div class="server-error" id="serverError" role="alert"></div>
         <button type="submit" class="btn-submit" id="submitBtn">Register Now</button>
       </form>
 
@@ -396,11 +409,13 @@
 
   </div>
 
+  <script src="config.js"></script>
   <script>
     const form = document.getElementById('regForm');
     const formSection = document.getElementById('formSection');
     const successSection = document.getElementById('successSection');
     const btn = document.getElementById('submitBtn');
+    const serverError = document.getElementById('serverError');
 
     function validateEmail(email) {
       return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -410,8 +425,10 @@
       return /^[6-9]\d{9}$/.test(phone);
     }
 
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
+      serverError.style.display = 'none';
+      serverError.textContent = '';
       
       let isValid = true;
 
@@ -454,12 +471,32 @@
       if (isValid) {
         btn.textContent = 'Processing...';
         btn.disabled = true;
-        
-        // Simulate API delay
-        setTimeout(() => {
+
+        try {
+          const apiBaseUrl = (window.SHAURYA_CONFIG && window.SHAURYA_CONFIG.apiBaseUrl || '').replace(/\/$/, '');
+          if (!apiBaseUrl) throw new Error('Registration service is not configured. Please contact the administrator.');
+
+          const response = await fetch(apiBaseUrl + '/api/public/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: name.value.trim(),
+              college: college.value.trim(),
+              mobile: mobile.value.trim(),
+              email: email.value.trim()
+            })
+          });
+          const payload = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(payload.error || 'Registration failed. Please try again.');
+
           formSection.style.display = 'none';
           successSection.style.display = 'flex';
-        }, 1200);
+        } catch (error) {
+          serverError.textContent = error.message || 'Registration failed. Please try again.';
+          serverError.style.display = 'block';
+          btn.textContent = 'Register Now';
+          btn.disabled = false;
+        }
       }
     });
 

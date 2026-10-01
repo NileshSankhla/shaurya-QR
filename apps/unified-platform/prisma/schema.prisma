@@ -1,0 +1,149 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Prisma is the current persistence adapter. Pages and workflows depend on the
+// PlatformStore contract, so another database adapter can replace it later.
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Guest {
+  id        String    @id @default(uuid()) @db.Uuid
+  name      String
+  college   String
+  contactNo String    @unique @map("mobile")
+  email     String    @unique
+  status    String    @default("UNASSIGNED")
+  active    Boolean   @default(true)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  removedAt DateTime? @map("removed_at") @db.Timestamptz(6)
+
+  qrCard      QrCard?
+  entries     FoodEntry[]
+  scanEvents  ScanEvent[]
+  activityLog ActivityLog[]
+
+  @@index([name])
+  @@index([college])
+  @@index([active, status])
+  @@map("users")
+}
+
+model QrCard {
+  uid       String   @id @map("unique_token")
+  status    String   @default("AVAILABLE")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  guestId String? @unique @map("assigned_user_id") @db.Uuid
+  guest   Guest?  @relation(fields: [guestId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@map("qr_codes")
+}
+
+model Volunteer {
+  id           String   @id @default(uuid()) @db.Uuid
+  username     String   @unique
+  passwordHash String   @map("password")
+  name         String
+  role         String   @default("VOLUNTEER")
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  entries    FoodEntry[]
+  scanEvents ScanEvent[]
+
+  @@index([role, active])
+  @@map("volunteers")
+}
+
+model ActivityLog {
+  id            String   @id @default(uuid()) @db.Uuid
+  action        String
+  volunteerName String   @map("volunteer_name")
+  guestName     String?  @map("user_name")
+  guestId       String?  @map("user_id") @db.Uuid
+  qrToken       String?  @map("qr_token")
+  details       String?
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  guest Guest? @relation(fields: [guestId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt(sort: Desc)], map: "idx_activity_logs_created_at")
+  @@index([action])
+  @@map("activity_logs")
+}
+
+model FoodDay {
+  id        Int      @id @default(autoincrement())
+  label     String
+  eventDate DateTime @unique @map("event_date") @db.Date
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  slots FoodSlot[]
+
+  @@map("food_days")
+}
+
+model FoodSlot {
+  id        Int      @id @default(autoincrement())
+  title     String
+  startTime DateTime @map("start_time") @db.Timestamptz(6)
+  endTime   DateTime @map("end_time") @db.Timestamptz(6)
+  status    String   @default("SCHEDULED")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  dayId Int     @map("day_id")
+  day   FoodDay @relation(fields: [dayId], references: [id], onDelete: Cascade)
+
+  entries    FoodEntry[]
+  scanEvents ScanEvent[]
+
+  @@index([status])
+  @@index([dayId, startTime])
+  @@map("food_slots")
+}
+
+model FoodEntry {
+  id        Int      @id @default(autoincrement())
+  scannedAt DateTime @default(now()) @map("scanned_at") @db.Timestamptz(6)
+
+  guestId String @map("guest_id") @db.Uuid
+  guest   Guest  @relation(fields: [guestId], references: [id], onDelete: Restrict)
+
+  slotId Int      @map("slot_id")
+  slot   FoodSlot @relation(fields: [slotId], references: [id], onDelete: Restrict)
+
+  volunteerId String    @map("volunteer_id") @db.Uuid
+  volunteer   Volunteer @relation(fields: [volunteerId], references: [id], onDelete: Restrict)
+
+  @@unique([guestId, slotId])
+  @@index([volunteerId, scannedAt])
+  @@index([slotId, scannedAt])
+  @@map("food_entries")
+}
+
+model ScanEvent {
+  id         String   @id @default(uuid()) @db.Uuid
+  successful Boolean
+  reason     String?
+  qrToken    String   @map("qr_token")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  volunteerId String    @map("volunteer_id") @db.Uuid
+  volunteer   Volunteer @relation(fields: [volunteerId], references: [id], onDelete: Restrict)
+
+  guestId String? @map("guest_id") @db.Uuid
+  guest   Guest?  @relation(fields: [guestId], references: [id], onDelete: SetNull)
+
+  slotId Int?      @map("slot_id")
+  slot   FoodSlot? @relation(fields: [slotId], references: [id], onDelete: SetNull)
+
+  @@index([volunteerId, createdAt])
+  @@index([successful, createdAt])
+  @@map("scan_events")
+}
