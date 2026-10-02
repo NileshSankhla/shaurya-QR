@@ -2,9 +2,9 @@
   
   <h1>🏆 Shaurya QR Ecosystem</h1>
 
-  <strong>The Ultimate QR-Based Event & Food Management Platform</strong>
+<strong>The Ultimate QR-Based Event & Food Management Platform</strong>
 
-  <br><br>
+<br><br>
 
   <p>
     <em>Manage thousands of event participants, instantly assign QR cards, and track food distribution with zero bottlenecks. Built for scale, designed for speed.</em>
@@ -15,13 +15,14 @@
 
 ## 💡 The Problem & The Solution
 
-**Imagine hosting a massive college fest or tech conference with thousands of attendees.** 
+**Imagine hosting a massive college fest or tech conference with thousands of attendees.**
 You need to register people quickly, hand them physical IDs, and make sure nobody takes double portions at the food stalls. Manual checking creates chaos, long lines, and data loss.
 
 **Enter the Shaurya QR Ecosystem.** 🚀
 
-We built a lightning-fast, QR-powered system. 
-- 📱 **Volunteers** use their smartphone cameras to scan participant QR cards and instantly verify if they are eligible for the current meal. 
+We built a lightning-fast, QR-powered system.
+
+- 📱 **Volunteers** use their smartphone cameras to scan participant QR cards and instantly verify if they are eligible for the current meal.
 - 👑 **Administrators** sit in the command center with a real-time dashboard showing exactly who is eating, who is scanning, and how the event is progressing.
 
 ---
@@ -39,11 +40,13 @@ The entire flow is designed to be frictionless:
 ## ✨ Features You Will Love
 
 ### 👑 For Administrators (The Command Center)
+
 - **📈 Live Analytics:** See exact numbers for registrations, meals served, and QR cards remaining in real-time.
 - **⏱️ Meal Slot Control:** Easily start "Breakfast", pause it, and then start "Lunch" with the click of a single button.
-- **🕵️ Audit Logs:** Absolute accountability. Every single scan, assignment, and registration is permanently recorded. 
+- **🕵️ Audit Logs:** Absolute accountability. Every single scan, assignment, and registration is permanently recorded.
 
 ### 🧑‍💼 For Volunteers (The On-Ground Heroes)
+
 - **⚡ Super-Fast Scanning:** Scans QR codes directly from the web browser using the phone's built-in camera—no app downloads required!
 - **🔒 Privacy-First:** Volunteers only see the specific data they need. They cannot export or view the full participant list.
 
@@ -74,6 +77,16 @@ shaurya-QR/
 
 > **Why this split?** The public registration site (`registration-page`) has zero direct access to the database. It is 100% static, meaning it is impossible to hack or crash via database overload. All heavy lifting is handled safely by the `unified-platform`.
 
+## Project history
+
+**Shaurya QR Ecosystem** is the latest version of the project.
+
+The previous implementation is preserved in [`NileshSankhla/Shaurya-Food-counter-2026`](https://github.com/NileshSankhla/Shaurya-Food-counter-2026). That project was the original food-counter application built with React/Vite, Express, JWT authentication, and MongoDB.
+
+This fork, [`NileshSankhla/shaurya-QR`](https://github.com/NileshSankhla/shaurya-QR), is the combined project home for current development and deployment. The old repository remains available for historical reference, while this repository contains the latest monorepo architecture and workflows.
+
+The repositories were developed as separate Git histories. Their relationship is documented here without replacing the current Shaurya QR application.
+
 ---
 
 ## 🚀 How to Run It on Your Machine
@@ -81,10 +94,12 @@ shaurya-QR/
 Want to test it out? Follow these steps to get a local copy up and running:
 
 ### 1. Prerequisites
+
 - **Node.js** (v20 or higher)
 - **PostgreSQL** Database (Local or Cloud)
 
 ### 2. Setup the Code
+
 ```bash
 # Clone the repository to your machine
 git clone https://github.com/bhanupratap07-hack/shaurya-QR.git
@@ -97,6 +112,7 @@ npm install
 ```
 
 ### 3. Setup the Database
+
 ```bash
 # Navigate to the main app folder
 cd apps/unified-platform
@@ -114,6 +130,7 @@ npm run db:seed
 ```
 
 ### 4. Start the Application!
+
 ```bash
 # Go back to the main folder
 cd ../../
