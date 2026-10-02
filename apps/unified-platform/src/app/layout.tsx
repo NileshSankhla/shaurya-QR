@@ -1,11 +1,15 @@
-import { Syne, Be_Vietnam_Pro } from "next/font/google";
+import { Roboto, Montserrat } from "next/font/google";
 import "./globals.css";
 
-const syne = Syne({ subsets: ["latin"], variable: "--font-display" });
-const beVietnamPro = Be_Vietnam_Pro({
-  weight: ['400', '500', '600', '700'],
-  subsets: ["latin"],
-  variable: "--font-body"
+const roboto = Roboto({ 
+  weight: ['400', '500', '700', '900'],
+  subsets: ["latin"], 
+  variable: "--font-body" 
+});
+
+const montserrat = Montserrat({ 
+  subsets: ["latin"], 
+  variable: "--font-display" 
 });
 
 export const metadata = {
@@ -20,7 +24,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${syne.variable} ${beVietnamPro.variable} min-h-screen antialiased`}>
+      <body className={`${montserrat.variable} ${roboto.variable} min-h-screen antialiased`}>
         {children}
       </body>
     </html>

@@ -156,9 +156,9 @@ export function UserManager({
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap gap-3">
-        <form onSubmit={submitSearch} className="flex min-w-0 flex-1 gap-2">
-          <select aria-label="Search field" className="portal-input w-auto min-w-32" value={field} onChange={(event) => navigate(1, { field: event.target.value as GuestSearchField })}>
+      <div className="flex flex-col gap-4">
+        <form onSubmit={submitSearch} className="flex w-full flex-wrap sm:flex-nowrap gap-3">
+          <select aria-label="Search field" className="portal-input w-full sm:w-auto min-w-32" value={field} onChange={(event) => navigate(1, { field: event.target.value as GuestSearchField })}>
             <option value="all">All fields</option>
             <option value="name">Name</option>
             <option value="college">College</option>
@@ -166,13 +166,18 @@ export function UserManager({
             <option value="email">Email</option>
             <option value="qr">QR token</option>
           </select>
-          <div className="relative min-w-0 flex-1">
+          <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-on-surface-variant)]" size={18} />
-            <input className="portal-input pl-11" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search name, mobile, email, college, or QR…" />
+            <input className="portal-input pl-11 w-full" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search name, mobile, email, college, or QR…" />
           </div>
-          <button className="portal-primary px-5">Search</button>
+          <button className="portal-primary px-8 w-full sm:w-auto">Search</button>
         </form>
-        <button type="button" onClick={() => setShowAdd(!showAdd)} className="portal-secondary"><Plus size={17} /> Add participant</button>
+
+        <div className="flex">
+          <button type="button" onClick={() => setShowAdd(!showAdd)} className="portal-secondary">
+            <Plus size={17} /> Add participant
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-2" aria-label="Participant status filter">

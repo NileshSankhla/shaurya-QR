@@ -31,7 +31,7 @@ export default function LoginPage() {
         <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-orange-200/40 blur-3xl" />
         <div className="absolute -bottom-40 -right-24 h-96 w-96 rounded-full bg-purple-200/40 blur-3xl" />
       </div>
-      <div className="relative w-full max-w-md rounded-[36px] border border-white bg-white/90 p-7 shadow-2xl shadow-orange-100 backdrop-blur md:p-9">
+      <div className="relative w-full max-w-md rounded-[36px] border border-white/80 bg-white/90 p-7 shadow-2xl shadow-black/10 backdrop-blur-md md:p-9">
         <div className="mb-8 text-center">
           <span className="relative mx-auto mb-4 block h-20 w-20 rounded-3xl bg-orange-50">
             <Image src="/logo.png" alt="Shaurya" fill className="object-contain p-2" />
