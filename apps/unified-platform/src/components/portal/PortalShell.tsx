@@ -109,9 +109,20 @@ export function PortalShell({
               Shaurya QR & Food Operations
             </p>
           </div>
-          <div className="text-right">
-            <p className="max-w-40 truncate text-sm font-bold">{name}</p>
-            <p className="text-[10px] text-green-600">● Signed in</p>
+          <div className="flex items-center gap-3 text-right">
+            <div>
+              <p className="max-w-40 truncate text-sm font-bold">{name}</p>
+              <p className="text-[10px] text-green-600">● Signed in</p>
+            </div>
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() => startTransition(() => logoutAction())}
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-red-50 text-red-600 active:bg-red-100 md:hidden"
+              aria-label="Sign out"
+            >
+              <LogOut size={15} />
+            </button>
           </div>
         </header>
 
