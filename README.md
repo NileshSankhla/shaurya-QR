@@ -77,17 +77,6 @@ shaurya-QR/
 
 > **Why this split?** The public registration site (`registration-page`) has zero direct access to the database. It is 100% static, meaning it is impossible to hack or crash via database overload. All heavy lifting is handled safely by the `unified-platform`.
 
-## Project history
-
-**Shaurya QR Ecosystem** is the latest version of the project.
-
-The previous implementation is preserved in [`NileshSankhla/Shaurya-Food-counter-2026`](https://github.com/NileshSankhla/Shaurya-Food-counter-2026). That project was the original food-counter application built with React/Vite, Express, JWT authentication, and MongoDB.
-
-This fork, [`NileshSankhla/shaurya-QR`](https://github.com/NileshSankhla/shaurya-QR), is the combined project home for current development and deployment. The old repository remains available for historical reference, while this repository contains the latest monorepo architecture and workflows.
-
-The repositories were developed as separate Git histories. Their relationship is documented here without replacing the current Shaurya QR application.
-
----
 
 ## 🚀 How to Run It on Your Machine
 
