@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   BadgeCheck,
@@ -27,20 +27,24 @@ const METRICS = [
   { key: 'activeVolunteers', label: 'Active staff', icon: ShieldCheck, color: 'text-pink-700 bg-pink-50' },
 ] as const
 
+const REFRESH_INTERVAL_MS = 30_000
+
 export function AdminOverview({ data }: { data: AdminOverviewData }) {
   const router = useRouter()
+  const [isRefreshing, startRefresh] = useTransition()
 
   useEffect(() => {
     const refreshIfVisible = () => {
-      if (document.visibilityState === 'visible') router.refresh()
+      if (document.visibilityState !== 'visible' || isRefreshing) return
+      startRefresh(() => router.refresh())
     }
-    const interval = window.setInterval(refreshIfVisible, 5_000)
+    const interval = window.setInterval(refreshIfVisible, REFRESH_INTERVAL_MS)
     document.addEventListener('visibilitychange', refreshIfVisible)
     return () => {
       window.clearInterval(interval)
       document.removeEventListener('visibilitychange', refreshIfVisible)
     }
-  }, [router])
+  }, [isRefreshing, router])
 
   const liveFeed = data.recent.map((item) => ({
     id: item.id,
@@ -84,7 +88,12 @@ export function AdminOverview({ data }: { data: AdminOverviewData }) {
             <h2 className="font-[family-name:var(--font-display)] text-lg font-black">Volunteer performance</h2>
             <p className="text-xs text-[var(--color-on-surface-variant)]">Every attempt is counted; verified means food was successfully approved.</p>
           </div>
-          <span className="rounded-full bg-green-50 px-3 py-1 text-[10px] font-black uppercase tracking-wide text-green-700">Live · 5 sec</span>
+          <span
+            aria-live="polite"
+            className="rounded-full bg-green-50 px-3 py-1 text-[10px] font-black uppercase tracking-wide text-green-700"
+          >
+            {isRefreshing ? 'Refreshing…' : 'Auto refresh · 30 sec'}
+          </span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[620px] text-left text-sm">

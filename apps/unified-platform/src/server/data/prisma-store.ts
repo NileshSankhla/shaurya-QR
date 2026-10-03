@@ -42,6 +42,14 @@ const guestInclude = {
   _count: { select: { entries: true } },
 } satisfies Prisma.GuestInclude
 
+type AdminSummaryCounts = {
+  guests: bigint
+  assigned: bigint
+  availableQrs: bigint
+  verifiedMeals: bigint
+  activeVolunteers: bigint
+}
+
 function normalizeGuest(input: GuestInput) {
   return {
     name: input.name.trim(),
@@ -369,11 +377,7 @@ export class PrismaPlatformStore implements PlatformStore {
 
   async getAdminOverview(): Promise<AdminOverview> {
     const [
-      guests,
-      assigned,
-      availableQrs,
-      verifiedMeals,
-      activeVolunteers,
+      summaryRows,
       activeSlot,
       collegeGroups,
       slots,
@@ -382,11 +386,14 @@ export class PrismaPlatformStore implements PlatformStore {
       recent,
       entries,
     ] = await Promise.all([
-      prisma.guest.count({ where: { active: true } }),
-      prisma.guest.count({ where: { active: true, status: 'ASSIGNED' } }),
-      prisma.qrCard.count({ where: { status: 'AVAILABLE' } }),
-      prisma.foodEntry.count(),
-      prisma.volunteer.count({ where: { active: true } }),
+      prisma.$queryRaw<AdminSummaryCounts[]>`
+        SELECT
+          (SELECT COUNT(*) FROM "users" WHERE "active" = true) AS "guests",
+          (SELECT COUNT(*) FROM "users" WHERE "active" = true AND "status" = 'ASSIGNED') AS "assigned",
+          (SELECT COUNT(*) FROM "qr_codes" WHERE "status" = 'AVAILABLE') AS "availableQrs",
+          (SELECT COUNT(*) FROM "food_entries") AS "verifiedMeals",
+          (SELECT COUNT(*) FROM "volunteers" WHERE "active" = true) AS "activeVolunteers"
+      `,
       prisma.foodSlot.findFirst({
         where: { status: 'ACTIVE' },
         orderBy: { updatedAt: 'desc' },
@@ -422,6 +429,14 @@ export class PrismaPlatformStore implements PlatformStore {
         select: { scannedAt: true },
       }),
     ])
+
+    const summary = summaryRows[0]
+    if (!summary) throw new Error('Admin summary query returned no data')
+    const guests = Number(summary.guests)
+    const assigned = Number(summary.assigned)
+    const availableQrs = Number(summary.availableQrs)
+    const verifiedMeals = Number(summary.verifiedMeals)
+    const activeVolunteers = Number(summary.activeVolunteers)
 
     const dayMap = new Map<string, Record<string, string | number>>()
     const heatmap: Record<string, Record<string, number>> = {}
