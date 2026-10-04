@@ -1,5 +1,5 @@
-import { Prisma } from '@prisma/client'
-import { prisma } from '@/lib/prisma'
+import { Prisma } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import type {
   AdminOverview,
   GuestInput,
@@ -11,18 +11,18 @@ import type {
   StaffInput,
   StaffUpdateInput,
   VolunteerHome,
-} from './contracts'
+} from "./contracts";
 
 function guestResult(guest: {
-  id: string
-  name: string
-  college: string
-  contactNo: string
-  email: string
-  status: string
-  active: boolean
-  qrCard?: { uid: string } | null
-  _count?: { entries: number }
+  id: string;
+  name: string;
+  college: string;
+  contactNo: string;
+  email: string;
+  status: string;
+  active: boolean;
+  qrCard?: { uid: string } | null;
+  _count?: { entries: number };
 }): GuestSearchResult {
   return {
     id: guest.id,
@@ -34,40 +34,40 @@ function guestResult(guest: {
     active: guest.active,
     qrToken: guest.qrCard?.uid ?? null,
     mealsVerified: guest._count?.entries ?? 0,
-  }
+  };
 }
 
 const guestInclude = {
   qrCard: { select: { uid: true } },
   _count: { select: { entries: true } },
-} satisfies Prisma.GuestInclude
+} satisfies Prisma.GuestInclude;
 
 type AdminSummaryCounts = {
-  guests: bigint
-  assigned: bigint
-  availableQrs: bigint
-  verifiedMeals: bigint
-  activeVolunteers: bigint
-}
+  guests: bigint;
+  assigned: bigint;
+  availableQrs: bigint;
+  verifiedMeals: bigint;
+  activeVolunteers: bigint;
+};
 
 function normalizeGuest(input: GuestInput) {
   return {
     name: input.name.trim(),
     college: input.college.trim(),
-    contactNo: input.mobile.replace(/\D/g, ''),
+    contactNo: input.mobile.replace(/\D/g, ""),
     email: input.email.trim().toLowerCase(),
-  }
+  };
 }
 
 async function activity(
   tx: Prisma.TransactionClient,
   input: {
-    action: string
-    actorName: string
-    guestId?: string
-    guestName?: string
-    qrToken?: string
-    details: string
+    action: string;
+    actorName: string;
+    guestId?: string;
+    guestName?: string;
+    qrToken?: string;
+    details: string;
   },
 ) {
   await tx.activityLog.create({
@@ -79,7 +79,7 @@ async function activity(
       qrToken: input.qrToken,
       details: input.details,
     },
-  })
+  });
 }
 
 export class PrismaPlatformStore implements PlatformStore {
@@ -94,25 +94,25 @@ export class PrismaPlatformStore implements PlatformStore {
         role: true,
         active: true,
       },
-    })
+    });
   }
 
   async upgradeStaffPassword(id: string, passwordHash: string) {
-    await prisma.volunteer.update({ where: { id }, data: { passwordHash } })
+    await prisma.volunteer.update({ where: { id }, data: { passwordHash } });
   }
 
   async registerGuest(input: GuestInput) {
     const guest = await prisma.guest.create({
       data: normalizeGuest(input),
       include: guestInclude,
-    })
-    return guestResult(guest)
+    });
+    return guestResult(guest);
   }
 
   async updateGuest(guestId: string, input: GuestInput, actorName: string) {
-    const existing = await prisma.guest.findUnique({ where: { id: guestId } })
-    if (!existing) throw new Error('Participant not found')
-    const normalized = normalizeGuest(input)
+    const existing = await prisma.guest.findUnique({ where: { id: guestId } });
+    if (!existing) throw new Error("Participant not found");
+    const normalized = normalizeGuest(input);
     const [guest] = await prisma.$transaction([
       prisma.guest.update({
         where: { id: guestId },
@@ -121,58 +121,76 @@ export class PrismaPlatformStore implements PlatformStore {
       }),
       prisma.activityLog.create({
         data: {
-          action: 'USER_UPDATED',
+          action: "USER_UPDATED",
           volunteerName: actorName,
           guestId,
           guestName: normalized.name,
           details: `${actorName} updated ${normalized.name}`,
         },
       }),
-    ])
-    return guestResult(guest)
+    ]);
+    return guestResult(guest);
   }
 
   async searchGuests(query: string, limit = 10) {
-    const q = query.trim()
-    if (q.length < 2) return []
+    const q = query.trim();
+    if (q.length < 2) return [];
     const guests = await prisma.guest.findMany({
       where: {
         active: true,
         OR: [
-          { name: { contains: q, mode: 'insensitive' } },
-          { college: { contains: q, mode: 'insensitive' } },
+          { name: { contains: q, mode: "insensitive" } },
+          { college: { contains: q, mode: "insensitive" } },
           { contactNo: { contains: q } },
-          { email: { contains: q, mode: 'insensitive' } },
-          { qrCard: { is: { uid: { contains: q, mode: 'insensitive' } } } },
+          { email: { contains: q, mode: "insensitive" } },
+          { qrCard: { is: { uid: { contains: q, mode: "insensitive" } } } },
         ],
       },
       include: guestInclude,
-      orderBy: { name: 'asc' },
+      orderBy: { name: "asc" },
       take: Math.min(Math.max(limit, 1), 20),
-    })
-    return guests.map(guestResult)
+    });
+    return guests.map(guestResult);
   }
 
-  async createGuestAndAssign(input: GuestInput, qrToken: string, _actorId: string, actorName: string) {
+  async createGuestAndAssign(
+    input: GuestInput,
+    qrToken: string,
+    _actorId: string,
+    actorName: string,
+  ) {
     return prisma.$transaction(async (tx) => {
-      const normalized = normalizeGuest(input)
+      const normalized = normalizeGuest(input);
       const existing = await tx.guest.findFirst({
-        where: { OR: [{ contactNo: normalized.contactNo }, { email: normalized.email }] },
+        where: {
+          OR: [
+            { contactNo: normalized.contactNo },
+            { email: normalized.email },
+          ],
+        },
         include: guestInclude,
-      })
+      });
       if (existing) {
-        const matchingField = existing.contactNo === normalized.contactNo ? 'mobile number' : 'email address'
-        const state = existing.active ? 'already registered' : 'currently removed'
+        const matchingField =
+          existing.contactNo === normalized.contactNo
+            ? "mobile number"
+            : "email address";
+        const state = existing.active
+          ? "already registered"
+          : "currently removed";
         throw new Error(
-          `This ${matchingField} belongs to ${existing.name}, who is ${state}. Search for that participant${existing.active ? ' and assign the QR' : ' or ask an admin to restore the record'}.`,
-        )
+          `This ${matchingField} belongs to ${existing.name}, who is ${state}. Search for that participant${existing.active ? " and assign the QR" : " or ask an admin to restore the record"}.`,
+        );
       }
 
-      const guest = await tx.guest.create({ data: normalized })
-      await this.assignQrInTransaction(tx, guest.id, qrToken, actorName)
-      const saved = await tx.guest.findUniqueOrThrow({ where: { id: guest.id }, include: guestInclude })
-      return guestResult(saved)
-    })
+      const guest = await tx.guest.create({ data: normalized });
+      await this.assignQrInTransaction(tx, guest.id, qrToken, actorName);
+      const saved = await tx.guest.findUniqueOrThrow({
+        where: { id: guest.id },
+        include: guestInclude,
+      });
+      return guestResult(saved);
+    });
   }
 
   private async assignQrInTransaction(
@@ -181,65 +199,91 @@ export class PrismaPlatformStore implements PlatformStore {
     rawToken: string,
     actorName: string,
   ) {
-    const token = rawToken.trim().toUpperCase()
-    const guest = await tx.guest.findUnique({ where: { id: guestId }, include: { qrCard: true } })
-    if (!guest || !guest.active) throw new Error('Participant not found or inactive')
-    if (guest.qrCard) throw new Error(`Participant already has QR ${guest.qrCard.uid}`)
+    const token = rawToken.trim().toUpperCase();
+    const guest = await tx.guest.findUnique({
+      where: { id: guestId },
+      include: { qrCard: true },
+    });
+    if (!guest || !guest.active)
+      throw new Error("Participant not found or inactive");
+    if (guest.qrCard)
+      throw new Error(`Participant already has QR ${guest.qrCard.uid}`);
 
     const card = await tx.qrCard.findUnique({
       where: { uid: token },
       include: { guest: { select: { name: true } } },
-    })
-    if (!card) throw new Error('QR code was not found in the inventory')
-    if (card.guestId || card.status === 'ASSIGNED') {
-      const owner = card.guest?.name ? ` to ${card.guest.name}` : ''
-      throw new Error(`QR code ${token} is already assigned${owner}`)
+    });
+    if (!card) throw new Error("QR code was not found in the inventory");
+    if (card.guestId || card.status === "ASSIGNED") {
+      const owner = card.guest?.name ? ` to ${card.guest.name}` : "";
+      throw new Error(`QR code ${token} is already assigned${owner}`);
     }
-    if (card.status !== 'AVAILABLE') throw new Error(`QR code ${token} is not available`)
+    if (card.status !== "AVAILABLE")
+      throw new Error(`QR code ${token} is not available`);
 
     const claimed = await tx.qrCard.updateMany({
-      where: { uid: token, status: 'AVAILABLE', guestId: null },
-      data: { status: 'ASSIGNED', guestId },
-    })
-    if (claimed.count !== 1) throw new Error('That QR was assigned by another operator. Scan a different QR.')
+      where: { uid: token, status: "AVAILABLE", guestId: null },
+      data: { status: "ASSIGNED", guestId },
+    });
+    if (claimed.count !== 1)
+      throw new Error(
+        "That QR was assigned by another operator. Scan a different QR.",
+      );
 
-    await tx.guest.update({ where: { id: guestId }, data: { status: 'ASSIGNED' } })
+    await tx.guest.update({
+      where: { id: guestId },
+      data: { status: "ASSIGNED" },
+    });
     await activity(tx, {
-      action: 'QR_ASSIGNED',
+      action: "QR_ASSIGNED",
       actorName,
       guestId,
       guestName: guest.name,
       qrToken: token,
       details: `${actorName} assigned ${token} to ${guest.name}`,
-    })
+    });
   }
 
   async assignQr(guestId: string, qrToken: string, actorName: string) {
-    await prisma.$transaction((tx) => this.assignQrInTransaction(tx, guestId, qrToken, actorName))
+    await prisma.$transaction((tx) =>
+      this.assignQrInTransaction(tx, guestId, qrToken, actorName),
+    );
   }
 
   async unassignQr(guestId: string, actorName: string) {
     await prisma.$transaction(async (tx) => {
-      const guest = await tx.guest.findUnique({ where: { id: guestId }, include: { qrCard: true } })
-      if (!guest) throw new Error('Participant not found')
-      if (!guest.qrCard) throw new Error('Participant has no assigned QR')
-      const token = guest.qrCard.uid
-      await tx.qrCard.update({ where: { uid: token }, data: { status: 'AVAILABLE', guestId: null } })
-      await tx.guest.update({ where: { id: guestId }, data: { status: 'UNASSIGNED' } })
+      const guest = await tx.guest.findUnique({
+        where: { id: guestId },
+        include: { qrCard: true },
+      });
+      if (!guest) throw new Error("Participant not found");
+      if (!guest.qrCard) throw new Error("Participant has no assigned QR");
+      const token = guest.qrCard.uid;
+      await tx.qrCard.update({
+        where: { uid: token },
+        data: { status: "AVAILABLE", guestId: null },
+      });
+      await tx.guest.update({
+        where: { id: guestId },
+        data: { status: "UNASSIGNED" },
+      });
       await activity(tx, {
-        action: 'QR_UNASSIGNED',
+        action: "QR_UNASSIGNED",
         actorName,
         guestId,
         guestName: guest.name,
         qrToken: token,
         details: `${actorName} unassigned ${token} from ${guest.name}`,
-      })
-    })
+      });
+    });
   }
 
   async setGuestActive(guestId: string, active: boolean, actorName: string) {
-    const guest = await prisma.guest.findUnique({ where: { id: guestId }, include: { qrCard: true } })
-    if (!guest) throw new Error('Participant not found')
+    const guest = await prisma.guest.findUnique({
+      where: { id: guestId },
+      include: { qrCard: true },
+    });
+    if (!guest) throw new Error("Participant not found");
 
     const participantUpdate = prisma.guest.update({
       where: { id: guestId },
@@ -247,41 +291,44 @@ export class PrismaPlatformStore implements PlatformStore {
         active,
         // The legacy database constrains status to assignment states. Account
         // removal is represented by active/removedAt, not another QR status.
-        status: 'UNASSIGNED',
+        status: "UNASSIGNED",
         removedAt: active ? null : new Date(),
       },
-    })
+    });
     const auditEntry = prisma.activityLog.create({
       data: {
-        action: active ? 'USER_RESTORED' : 'USER_REMOVED',
+        action: active ? "USER_RESTORED" : "USER_REMOVED",
         volunteerName: actorName,
         guestId,
         guestName: guest.name,
-        details: `${actorName} ${active ? 'restored' : 'removed'} ${guest.name}`,
+        details: `${actorName} ${active ? "restored" : "removed"} ${guest.name}`,
       },
-    })
+    });
 
     if (!active && guest.qrCard) {
       await prisma.$transaction([
         prisma.qrCard.update({
           where: { uid: guest.qrCard.uid },
-          data: { status: 'AVAILABLE', guestId: null },
+          data: { status: "AVAILABLE", guestId: null },
         }),
         participantUpdate,
         auditEntry,
-      ])
+      ]);
     } else {
-      await prisma.$transaction([participantUpdate, auditEntry])
+      await prisma.$transaction([participantUpdate, auditEntry]);
     }
   }
 
   async verifyMeal(rawToken: string, volunteerId: string) {
-    const qrToken = rawToken.trim().toUpperCase()
+    const qrToken = rawToken.trim().toUpperCase();
     const activeSlot = await prisma.foodSlot.findFirst({
-      where: { status: 'ACTIVE' },
-      orderBy: { updatedAt: 'desc' },
-    })
-    const card = await prisma.qrCard.findUnique({ where: { uid: qrToken }, include: { guest: true } })
+      where: { status: "ACTIVE" },
+      orderBy: { updatedAt: "desc" },
+    });
+    const card = await prisma.qrCard.findUnique({
+      where: { uid: qrToken },
+      include: { guest: true },
+    });
 
     const reject = async (reason: string) => {
       await prisma.scanEvent.create({
@@ -293,14 +340,14 @@ export class PrismaPlatformStore implements PlatformStore {
           guestId: card?.guestId,
           slotId: activeSlot?.id,
         },
-      })
-      return { success: false, reason }
-    }
+      });
+      return { success: false, reason };
+    };
 
-    if (!activeSlot) return reject('No food slot is active')
-    if (!card) return reject('QR code not found')
-    if (card.status !== 'ASSIGNED' || !card.guest || !card.guest.active) {
-      return reject('QR code is not assigned to an active participant')
+    if (!activeSlot) return reject("No food slot is active");
+    if (!card) return reject("QR code not found");
+    if (card.status !== "ASSIGNED" || !card.guest || !card.guest.active) {
+      return reject("QR code is not assigned to an active participant");
     }
 
     try {
@@ -317,38 +364,54 @@ export class PrismaPlatformStore implements PlatformStore {
             slotId: activeSlot.id,
           },
         }),
-      ])
+      ]);
       return {
         success: true,
         guestName: card.guest.name,
         college: card.guest.college,
         slotTitle: activeSlot.title,
-      }
+      };
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-        return reject(`Food already verified for ${activeSlot.title}`)
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2002"
+      ) {
+        return reject(`Food already verified for ${activeSlot.title}`);
       }
-      throw error
+      throw error;
     }
   }
 
   async getVolunteerHome(staffId: string): Promise<VolunteerHome> {
-    const [totalGuests, scannedByMe, verifiedByMe, activeSlot, recent] = await Promise.all([
-      prisma.guest.count({ where: { active: true } }),
-      prisma.scanEvent.count({ where: { volunteerId: staffId } }),
-      prisma.scanEvent.count({ where: { volunteerId: staffId, successful: true } }),
-      prisma.foodSlot.findFirst({
-        where: { status: 'ACTIVE' },
-        orderBy: { updatedAt: 'desc' },
-        include: { day: true, _count: { select: { entries: true } } },
-      }),
-      prisma.scanEvent.findMany({
-        where: { volunteerId: staffId },
-        take: 8,
-        orderBy: { createdAt: 'desc' },
-        include: { guest: { select: { name: true } }, slot: { select: { title: true } } },
-      }),
-    ])
+    const [totalGuests, scannedByMe, verifiedByMe, activeSlot, recent] =
+      await Promise.all([
+        prisma.guest.count({ where: { active: true } }),
+        prisma.scanEvent.count({ where: { volunteerId: staffId } }),
+        prisma.scanEvent.count({
+          where: { volunteerId: staffId, successful: true },
+        }),
+        prisma.foodSlot.findFirst({
+          where: { status: "ACTIVE" },
+          orderBy: { updatedAt: "desc" },
+          select: {
+            id: true,
+            title: true,
+            startTime: true,
+            endTime: true,
+            day: { select: { label: true } },
+            _count: { select: { entries: true } },
+          },
+        }),
+        prisma.scanEvent.findMany({
+          where: { volunteerId: staffId },
+          take: 8,
+          orderBy: { createdAt: "desc" },
+          include: {
+            guest: { select: { name: true } },
+            slot: { select: { title: true } },
+          },
+        }),
+      ]);
 
     return {
       totalGuests,
@@ -368,14 +431,16 @@ export class PrismaPlatformStore implements PlatformStore {
         id: event.id,
         successful: event.successful,
         guestName: event.guest?.name ?? event.qrToken,
-        slotTitle: event.slot?.title ?? 'No active slot',
+        slotTitle: event.slot?.title ?? "No active slot",
         reason: event.reason,
         createdAt: event.createdAt.toISOString(),
       })),
-    }
+    };
   }
 
-  async getAdminOverview(): Promise<AdminOverview> {
+  async getAdminOverview(recentPage = 1): Promise<AdminOverview> {
+    const activityPageSize = 10;
+    const safeRecentPage = Math.max(1, Math.floor(recentPage));
     const [
       summaryRows,
       activeSlot,
@@ -384,6 +449,7 @@ export class PrismaPlatformStore implements PlatformStore {
       staff,
       performanceGroups,
       recent,
+      recentCount,
       entries,
     ] = await Promise.all([
       prisma.$queryRaw<AdminSummaryCounts[]>`
@@ -395,87 +461,111 @@ export class PrismaPlatformStore implements PlatformStore {
           (SELECT COUNT(*) FROM "volunteers" WHERE "active" = true) AS "activeVolunteers"
       `,
       prisma.foodSlot.findFirst({
-        where: { status: 'ACTIVE' },
-        orderBy: { updatedAt: 'desc' },
-        include: { day: true, _count: { select: { entries: true } } },
+        where: { status: "ACTIVE" },
+        orderBy: { updatedAt: "desc" },
+        select: {
+          id: true,
+          title: true,
+          day: { select: { label: true } },
+          _count: { select: { entries: true } },
+        },
       }),
       prisma.guest.groupBy({
-        by: ['college'],
+        by: ["college"],
         where: { active: true },
         _count: { id: true },
-        orderBy: { _count: { id: 'desc' } },
+        orderBy: { _count: { id: "desc" } },
       }),
       prisma.foodSlot.findMany({
-        include: { day: true, _count: { select: { entries: true } } },
-        orderBy: { startTime: 'asc' },
+        select: {
+          title: true,
+          day: { select: { label: true } },
+          _count: { select: { entries: true } },
+        },
+        orderBy: { startTime: "asc" },
       }),
-      prisma.volunteer.findMany({ orderBy: [{ role: 'asc' }, { name: 'asc' }] }),
+      prisma.volunteer.findMany({
+        select: { id: true, name: true, role: true, active: true },
+        orderBy: [{ role: "asc" }, { name: "asc" }],
+      }),
       prisma.scanEvent.groupBy({
-        by: ['volunteerId', 'successful'],
+        by: ["volunteerId", "successful"],
         _count: { _all: true },
       }),
       prisma.scanEvent.findMany({
-        take: 15,
-        orderBy: { createdAt: 'desc' },
+        skip: (safeRecentPage - 1) * activityPageSize,
+        take: activityPageSize,
+        orderBy: { createdAt: "desc" },
         include: {
           guest: { select: { name: true } },
           volunteer: { select: { name: true } },
           slot: { select: { title: true } },
         },
       }),
+      prisma.scanEvent.count(),
       prisma.foodEntry.findMany({
         take: 1000,
-        orderBy: { scannedAt: 'desc' },
+        orderBy: { scannedAt: "desc" },
         select: { scannedAt: true },
       }),
-    ])
+    ]);
 
-    const summary = summaryRows[0]
-    if (!summary) throw new Error('Admin summary query returned no data')
-    const guests = Number(summary.guests)
-    const assigned = Number(summary.assigned)
-    const availableQrs = Number(summary.availableQrs)
-    const verifiedMeals = Number(summary.verifiedMeals)
-    const activeVolunteers = Number(summary.activeVolunteers)
+    const summary = summaryRows[0];
+    if (!summary) throw new Error("Admin summary query returned no data");
+    const guests = Number(summary.guests);
+    const assigned = Number(summary.assigned);
+    const availableQrs = Number(summary.availableQrs);
+    const verifiedMeals = Number(summary.verifiedMeals);
+    const activeVolunteers = Number(summary.activeVolunteers);
 
-    const dayMap = new Map<string, Record<string, string | number>>()
-    const heatmap: Record<string, Record<string, number>> = {}
+    const dayMap = new Map<string, Record<string, string | number>>();
+    const heatmap: Record<string, Record<string, number>> = {};
     for (const slot of slots) {
-      const day = slot.day.label
-      const row = dayMap.get(day) ?? { day }
-      row[slot.title] = Number(row[slot.title] ?? 0) + slot._count.entries
-      dayMap.set(day, row)
-      heatmap[day] ??= {}
-      heatmap[day][slot.title] = slot._count.entries
+      const day = slot.day.label;
+      const row = dayMap.get(day) ?? { day };
+      row[slot.title] = Number(row[slot.title] ?? 0) + slot._count.entries;
+      dayMap.set(day, row);
+      heatmap[day] ??= {};
+      heatmap[day][slot.title] = slot._count.entries;
     }
 
-    const attemptMap = new Map<string, number>()
-    const verifiedMap = new Map<string, number>()
-    let scanAttempts = 0
+    const attemptMap = new Map<string, number>();
+    const verifiedMap = new Map<string, number>();
+    let scanAttempts = 0;
     for (const row of performanceGroups) {
-      const count = row._count._all
-      scanAttempts += count
-      attemptMap.set(row.volunteerId, (attemptMap.get(row.volunteerId) ?? 0) + count)
-      if (row.successful) verifiedMap.set(row.volunteerId, count)
+      const count = row._count._all;
+      scanAttempts += count;
+      attemptMap.set(
+        row.volunteerId,
+        (attemptMap.get(row.volunteerId) ?? 0) + count,
+      );
+      if (row.successful) verifiedMap.set(row.volunteerId, count);
     }
 
-    const countsByDay = new Map<string, number>()
+    const countsByDay = new Map<string, number>();
     for (const entry of entries.reverse()) {
-      const label = entry.scannedAt.toLocaleDateString('en-IN', {
-        day: '2-digit',
-        month: 'short',
-        timeZone: 'Asia/Kolkata',
-      })
-      countsByDay.set(label, (countsByDay.get(label) ?? 0) + 1)
+      const label = entry.scannedAt.toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        timeZone: "Asia/Kolkata",
+      });
+      countsByDay.set(label, (countsByDay.get(label) ?? 0) + 1);
     }
-    let cumulative = 0
+    let cumulative = 0;
     const cumulativeData = Array.from(countsByDay, ([label, count]) => {
-      cumulative += count
-      return { label, value: cumulative }
-    })
+      cumulative += count;
+      return { label, value: cumulative };
+    });
 
     return {
-      totals: { guests, assigned, availableQrs, verifiedMeals, scanAttempts, activeVolunteers },
+      totals: {
+        guests,
+        assigned,
+        availableQrs,
+        verifiedMeals,
+        scanAttempts,
+        activeVolunteers,
+      },
       activeSlot: activeSlot
         ? {
             id: activeSlot.id,
@@ -485,7 +575,10 @@ export class PrismaPlatformStore implements PlatformStore {
             total: guests,
           }
         : null,
-      collegeData: collegeGroups.map((row) => ({ college: row.college, count: row._count.id })),
+      collegeData: collegeGroups.map((row) => ({
+        college: row.college,
+        count: row._count.id,
+      })),
       dayOverview: Array.from(dayMap.values()),
       heatmap,
       cumulativeData,
@@ -502,11 +595,13 @@ export class PrismaPlatformStore implements PlatformStore {
         successful: event.successful,
         guestName: event.guest?.name ?? event.qrToken,
         volunteerName: event.volunteer.name,
-        slotTitle: event.slot?.title ?? 'No active slot',
+        slotTitle: event.slot?.title ?? "No active slot",
         reason: event.reason,
         createdAt: event.createdAt.toISOString(),
       })),
-    }
+      recentPage: safeRecentPage,
+      recentPages: Math.max(1, Math.ceil(recentCount / activityPageSize)),
+    };
   }
 
   async getGuestHistory(guestId: string): Promise<GuestHistory | null> {
@@ -514,9 +609,9 @@ export class PrismaPlatformStore implements PlatformStore {
       where: { id: guestId },
       include: {
         ...guestInclude,
-        activityLog: { orderBy: { createdAt: 'desc' } },
+        activityLog: { orderBy: { createdAt: "desc" } },
         entries: {
-          orderBy: { scannedAt: 'desc' },
+          orderBy: { scannedAt: "desc" },
           include: {
             volunteer: { select: { name: true } },
             slot: { select: { title: true, day: { select: { label: true } } } },
@@ -524,21 +619,21 @@ export class PrismaPlatformStore implements PlatformStore {
         },
         scanEvents: {
           where: { successful: false },
-          orderBy: { createdAt: 'desc' },
+          orderBy: { createdAt: "desc" },
           include: {
             volunteer: { select: { name: true } },
             slot: { select: { title: true } },
           },
         },
       },
-    })
-    if (!guest) return null
+    });
+    if (!guest) return null;
 
-    const timeline: GuestHistory['timeline'] = [
+    const timeline: GuestHistory["timeline"] = [
       {
         id: `registration-${guest.id}`,
-        kind: 'REGISTRATION' as const,
-        title: 'Participant registered',
+        kind: "REGISTRATION" as const,
+        title: "Participant registered",
         description: `${guest.name} was added from ${guest.college}.`,
         actor: null,
         qrToken: null,
@@ -548,19 +643,23 @@ export class PrismaPlatformStore implements PlatformStore {
       },
       ...guest.activityLog.map((event) => ({
         id: `activity-${event.id}`,
-        kind: event.action.startsWith('QR_') ? 'QR' as const : 'ACCOUNT' as const,
-        title: event.action === 'QR_ASSIGNED'
-          ? 'QR assigned'
-          : event.action === 'QR_UNASSIGNED'
-            ? 'QR unassigned'
-            : event.action === 'USER_REMOVED'
-              ? 'Participant removed'
-              : event.action === 'USER_RESTORED'
-                ? 'Participant restored'
-                : event.action === 'USER_UPDATED'
-                  ? 'Participant details updated'
-                  : event.action.replaceAll('_', ' ').toLowerCase(),
-        description: event.details ?? event.action.replaceAll('_', ' ').toLowerCase(),
+        kind: event.action.startsWith("QR_")
+          ? ("QR" as const)
+          : ("ACCOUNT" as const),
+        title:
+          event.action === "QR_ASSIGNED"
+            ? "QR assigned"
+            : event.action === "QR_UNASSIGNED"
+              ? "QR unassigned"
+              : event.action === "USER_REMOVED"
+                ? "Participant removed"
+                : event.action === "USER_RESTORED"
+                  ? "Participant restored"
+                  : event.action === "USER_UPDATED"
+                    ? "Participant details updated"
+                    : event.action.replaceAll("_", " ").toLowerCase(),
+        description:
+          event.details ?? event.action.replaceAll("_", " ").toLowerCase(),
         actor: event.volunteerName,
         qrToken: event.qrToken,
         slotTitle: null,
@@ -569,8 +668,8 @@ export class PrismaPlatformStore implements PlatformStore {
       })),
       ...guest.entries.map((entry) => ({
         id: `meal-${entry.id}`,
-        kind: 'MEAL' as const,
-        title: 'Meal verified',
+        kind: "MEAL" as const,
+        title: "Meal verified",
         description: `${entry.slot.day.label} · ${entry.slot.title}`,
         actor: entry.volunteer.name,
         qrToken: null,
@@ -580,16 +679,19 @@ export class PrismaPlatformStore implements PlatformStore {
       })),
       ...guest.scanEvents.map((event) => ({
         id: `scan-${event.id}`,
-        kind: 'REJECTED_SCAN' as const,
-        title: 'Verification rejected',
-        description: event.reason ?? 'The QR verification attempt was rejected.',
+        kind: "REJECTED_SCAN" as const,
+        title: "Verification rejected",
+        description:
+          event.reason ?? "The QR verification attempt was rejected.",
         actor: event.volunteer.name,
         qrToken: event.qrToken,
         slotTitle: event.slot?.title ?? null,
         successful: false,
         createdAt: event.createdAt.toISOString(),
       })),
-    ].sort((left, right) => Date.parse(right.createdAt) - Date.parse(left.createdAt))
+    ].sort(
+      (left, right) => Date.parse(right.createdAt) - Date.parse(left.createdAt),
+    );
 
     return {
       guest: {
@@ -603,7 +705,7 @@ export class PrismaPlatformStore implements PlatformStore {
         rejectedScans: guest.scanEvents.length,
       },
       timeline,
-    }
+    };
   }
 
   async listGuests(
@@ -611,38 +713,49 @@ export class PrismaPlatformStore implements PlatformStore {
     page: number,
     pageSize: number,
     filters: GuestListFilters = {
-      scope: 'ACTIVE',
-      assignment: 'ALL',
-      field: 'all',
-      sortBy: 'createdAt',
-      direction: 'desc',
+      scope: "ACTIVE",
+      assignment: "ALL",
+      field: "all",
+      sortBy: "createdAt",
+      direction: "desc",
     },
   ) {
-    const q = query.trim()
-    const searchByField: Record<Exclude<GuestListFilters['field'], 'all'>, Prisma.GuestWhereInput> = {
-      name: { name: { contains: q, mode: 'insensitive' } },
-      college: { college: { contains: q, mode: 'insensitive' } },
+    const q = query.trim();
+    const searchByField: Record<
+      Exclude<GuestListFilters["field"], "all">,
+      Prisma.GuestWhereInput
+    > = {
+      name: { name: { contains: q, mode: "insensitive" } },
+      college: { college: { contains: q, mode: "insensitive" } },
       mobile: { contactNo: { contains: q } },
-      email: { email: { contains: q, mode: 'insensitive' } },
-      qr: { qrCard: { is: { uid: { contains: q, mode: 'insensitive' } } } },
-    }
-    const allFieldSearch: Prisma.GuestWhereInput[] = Object.values(searchByField)
+      email: { email: { contains: q, mode: "insensitive" } },
+      qr: { qrCard: { is: { uid: { contains: q, mode: "insensitive" } } } },
+    };
+    const allFieldSearch: Prisma.GuestWhereInput[] =
+      Object.values(searchByField);
     const where: Prisma.GuestWhereInput = {
-      ...(filters.scope === 'ACTIVE' ? { active: true } : filters.scope === 'REMOVED' ? { active: false } : {}),
-      ...(filters.assignment === 'ASSIGNED'
+      ...(filters.scope === "ACTIVE"
+        ? { active: true }
+        : filters.scope === "REMOVED"
+          ? { active: false }
+          : {}),
+      ...(filters.assignment === "ASSIGNED"
         ? { qrCard: { isNot: null } }
-        : filters.assignment === 'UNASSIGNED'
+        : filters.assignment === "UNASSIGNED"
           ? { qrCard: { is: null } }
           : {}),
       ...(q
-        ? filters.field === 'all' ? { OR: allFieldSearch } : searchByField[filters.field]
+        ? filters.field === "all"
+          ? { OR: allFieldSearch }
+          : searchByField[filters.field]
         : {}),
-    }
-    const orderBy: Prisma.GuestOrderByWithRelationInput = filters.sortBy === 'mobile'
-      ? { contactNo: filters.direction }
-      : { [filters.sortBy]: filters.direction }
-    const safePage = Math.max(1, page)
-    const safeSize = Math.min(Math.max(pageSize, 1), 100)
+    };
+    const orderBy: Prisma.GuestOrderByWithRelationInput =
+      filters.sortBy === "mobile"
+        ? { contactNo: filters.direction }
+        : { [filters.sortBy]: filters.direction };
+    const safePage = Math.max(1, page);
+    const safeSize = Math.min(Math.max(pageSize, 1), 100);
     const [total, rows] = await Promise.all([
       prisma.guest.count({ where }),
       prisma.guest.findMany({
@@ -652,15 +765,26 @@ export class PrismaPlatformStore implements PlatformStore {
         skip: (safePage - 1) * safeSize,
         take: safeSize,
       }),
-    ])
-    return { guests: rows.map(guestResult), total, page: safePage, pageSize: safeSize }
+    ]);
+    return {
+      guests: rows.map(guestResult),
+      total,
+      page: safePage,
+      pageSize: safeSize,
+    };
   }
 
   async listStaff() {
     return prisma.volunteer.findMany({
-      select: { id: true, username: true, name: true, role: true, active: true },
-      orderBy: [{ role: 'asc' }, { name: 'asc' }],
-    })
+      select: {
+        id: true,
+        username: true,
+        name: true,
+        role: true,
+        active: true,
+      },
+      orderBy: [{ role: "asc" }, { name: "asc" }],
+    });
   }
 
   async createStaff(input: StaffInput) {
@@ -671,7 +795,7 @@ export class PrismaPlatformStore implements PlatformStore {
         passwordHash: input.passwordHash,
         role: input.role,
       },
-    })
+    });
   }
 
   async updateStaff(id: string, input: StaffUpdateInput) {
@@ -683,18 +807,18 @@ export class PrismaPlatformStore implements PlatformStore {
         role: input.role,
         ...(input.passwordHash ? { passwordHash: input.passwordHash } : {}),
       },
-    })
+    });
   }
 
   async setStaffActive(id: string, active: boolean) {
-    await prisma.volunteer.update({ where: { id }, data: { active } })
+    await prisma.volunteer.update({ where: { id }, data: { active } });
   }
 
   async listSlots() {
     const slots = await prisma.foodSlot.findMany({
       include: { day: true, _count: { select: { entries: true } } },
-      orderBy: { startTime: 'asc' },
-    })
+      orderBy: { startTime: "asc" },
+    });
     return slots.map((slot) => ({
       id: slot.id,
       title: slot.title,
@@ -704,40 +828,54 @@ export class PrismaPlatformStore implements PlatformStore {
       startTime: slot.startTime.toISOString(),
       endTime: slot.endTime.toISOString(),
       served: slot._count.entries,
-    }))
+    }));
   }
 
   async createSlot(input: SlotInput) {
-    const eventDate = new Date(`${input.eventDate}T00:00:00.000Z`)
-    const startTime = new Date(input.startTime)
-    const endTime = new Date(input.endTime)
-    if ([eventDate, startTime, endTime].some((date) => Number.isNaN(date.getTime()))) {
-      throw new Error('Invalid slot date or time')
+    const eventDate = new Date(`${input.eventDate}T00:00:00.000Z`);
+    const startTime = new Date(input.startTime);
+    const endTime = new Date(input.endTime);
+    if (
+      [eventDate, startTime, endTime].some((date) =>
+        Number.isNaN(date.getTime()),
+      )
+    ) {
+      throw new Error("Invalid slot date or time");
     }
-    if (endTime <= startTime) throw new Error('End time must be after start time')
+    if (endTime <= startTime)
+      throw new Error("End time must be after start time");
 
     const day = await prisma.foodDay.upsert({
       where: { eventDate },
       update: { label: input.dayLabel.trim() },
       create: { eventDate, label: input.dayLabel.trim() },
-    })
+    });
     await prisma.foodSlot.create({
       data: { dayId: day.id, title: input.title.trim(), startTime, endTime },
-    })
+    });
   }
 
-  async setSlotStatus(id: number, status: 'SCHEDULED' | 'ACTIVE' | 'PAUSED' | 'CLOSED') {
+  async setSlotStatus(
+    id: number,
+    status: "SCHEDULED" | "ACTIVE" | "PAUSED" | "CLOSED",
+  ) {
     await prisma.$transaction(async (tx) => {
-      if (status === 'ACTIVE') {
-        await tx.foodSlot.updateMany({ where: { status: 'ACTIVE', id: { not: id } }, data: { status: 'PAUSED' } })
+      if (status === "ACTIVE") {
+        await tx.foodSlot.updateMany({
+          where: { status: "ACTIVE", id: { not: id } },
+          data: { status: "PAUSED" },
+        });
       }
-      await tx.foodSlot.update({ where: { id }, data: { status } })
-    })
+      await tx.foodSlot.update({ where: { id }, data: { status } });
+    });
   }
 
   async deleteSlot(id: number) {
-    const entries = await prisma.foodEntry.count({ where: { slotId: id } })
-    if (entries > 0) throw new Error('Slots with verified meals cannot be deleted; close it instead')
-    await prisma.foodSlot.delete({ where: { id } })
+    const entries = await prisma.foodEntry.count({ where: { slotId: id } });
+    if (entries > 0)
+      throw new Error(
+        "Slots with verified meals cannot be deleted; close it instead",
+      );
+    await prisma.foodSlot.delete({ where: { id } });
   }
 }

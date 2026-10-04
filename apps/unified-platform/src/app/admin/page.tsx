@@ -1,13 +1,13 @@
-import { Suspense } from 'react'
-import { AdminOverview } from '@/components/admin/AdminOverview'
-import { SectionHeading } from '@/components/portal/PortalShell'
-import { platformStore } from '@/server/data'
+import { Suspense } from "react";
+import { AdminOverview } from "@/components/admin/AdminOverview";
+import { SectionHeading } from "@/components/portal/PortalShell";
+import { platformStore } from "@/server/data";
 
-export const revalidate = 60 // 1 minute caching
+export const revalidate = 60; // 1 minute caching
 
-async function DashboardData() {
-  const data = await platformStore.getAdminOverview()
-  return <AdminOverview data={data} />
+async function DashboardData({ recentPage }: { recentPage: number }) {
+  const data = await platformStore.getAdminOverview(recentPage);
+  return <AdminOverview data={data} />;
 }
 
 function DashboardSkeleton() {
@@ -18,10 +18,19 @@ function DashboardSkeleton() {
         <p className="text-sm text-gray-500">Loading live operations data...</p>
       </div>
     </div>
-  )
+  );
 }
 
-export default function AdminPage() {
+export default async function AdminPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ activityPage?: string }>;
+}) {
+  const params = await searchParams;
+  const parsedPage = Number.parseInt(params.activityPage ?? "1", 10);
+  const recentPage =
+    Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;
+
   return (
     <>
       <SectionHeading
@@ -29,8 +38,8 @@ export default function AdminPage() {
         description="Live QR distribution, meal verification, participant, college, and volunteer performance."
       />
       <Suspense fallback={<DashboardSkeleton />}>
-        <DashboardData />
+        <DashboardData recentPage={recentPage} />
       </Suspense>
     </>
-  )
+  );
 }
