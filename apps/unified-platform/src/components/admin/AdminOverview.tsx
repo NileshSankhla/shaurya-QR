@@ -4,8 +4,6 @@ import { useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   BadgeCheck,
-  ChevronLeft,
-  ChevronRight,
   CircleGauge,
   QrCode,
   ScanLine,
@@ -200,32 +198,7 @@ export function AdminOverview({ data }: { data: AdminOverviewData }) {
         <h2 className="mb-3 font-[family-name:var(--font-display)] text-lg font-black">
           Live verification activity
         </h2>
-        <LiveFeed items={liveFeed} />
-        {data.recentPages > 1 && (
-          <div className="mt-3 flex items-center justify-between rounded-2xl border border-[var(--color-surface-variant)] bg-white px-3 py-2">
-            <button
-              type="button"
-              onClick={() => goToActivityPage(data.recentPage - 1)}
-              disabled={data.recentPage === 1}
-              aria-label="Previous activity page"
-              className="portal-secondary p-2 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              <ChevronLeft size={16} />
-            </button>
-            <span className="text-xs font-bold text-[var(--color-on-surface-variant)]">
-              Page {data.recentPage} of {data.recentPages}
-            </span>
-            <button
-              type="button"
-              onClick={() => goToActivityPage(data.recentPage + 1)}
-              disabled={data.recentPage === data.recentPages}
-              aria-label="Next activity page"
-              className="portal-secondary p-2 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              <ChevronRight size={16} />
-            </button>
-          </div>
-        )}
+        <LiveFeed items={liveFeed} pageSize={10} />
       </section>
     </div>
   );
