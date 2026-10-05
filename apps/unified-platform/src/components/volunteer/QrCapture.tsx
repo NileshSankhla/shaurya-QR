@@ -106,17 +106,50 @@ export function QrCapture({
 
   return (
     <div className="space-y-3">
-      {cameraOpen ? (
-        <div className="relative aspect-[4/3] overflow-hidden rounded-3xl bg-black">
-          <video ref={videoRef} muted playsInline className="h-full w-full object-cover" />
-          {starting && <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-white"><Loader2 className="animate-spin" /></div>}
-          <button type="button" onClick={() => setCameraOpen(false)} className="absolute right-3 top-3 rounded-full bg-black/60 p-2 text-white"><CameraOff size={18} /></button>
+      <button type="button" disabled={disabled || starting} onClick={openCamera} className="portal-secondary w-full justify-center py-3">
+        {starting ? <Loader2 className="animate-spin" size={18} /> : <Camera size={18} />}
+        {starting ? 'Checking camera…' : 'Open camera scanner'}
+      </button>
+
+      {cameraOpen && (
+        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center p-4">
+          {/* Animated glow background */}
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-md transition-opacity animate-in fade-in"
+            onClick={() => setCameraOpen(false)}
+          />
+          <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,var(--color-primary)_0%,transparent_50%)] opacity-30 animate-pulse mix-blend-screen" />
+          
+          {/* Camera Modal Container */}
+          <div className="relative w-full max-w-sm overflow-hidden rounded-[2.5rem] bg-black shadow-2xl ring-4 ring-white/10 animate-in fade-in zoom-in-95 duration-300">
+            <div className="relative aspect-[3/4] w-full">
+              <video ref={videoRef} muted playsInline className="h-full w-full object-cover" />
+              {starting && <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-white"><Loader2 className="animate-spin" /></div>}
+              
+              {/* Scanning crosshairs overlay */}
+              <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                <div className="w-48 h-48 border-2 border-white/30 rounded-3xl relative">
+                  <div className="absolute -top-1 -left-1 w-6 h-6 border-t-4 border-l-4 border-[var(--color-primary)] rounded-tl-2xl" />
+                  <div className="absolute -top-1 -right-1 w-6 h-6 border-t-4 border-r-4 border-[var(--color-primary)] rounded-tr-2xl" />
+                  <div className="absolute -bottom-1 -left-1 w-6 h-6 border-b-4 border-l-4 border-[var(--color-primary)] rounded-bl-2xl" />
+                  <div className="absolute -bottom-1 -right-1 w-6 h-6 border-b-4 border-r-4 border-[var(--color-primary)] rounded-br-2xl" />
+                </div>
+              </div>
+            </div>
+            
+            <div className="absolute top-4 right-4 z-10">
+              <button type="button" onClick={() => setCameraOpen(false)} className="flex h-12 w-12 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-md transition-colors hover:bg-red-600/90 shadow-xl border border-white/10">
+                <CameraOff size={20} />
+              </button>
+            </div>
+            
+            <div className="absolute bottom-6 left-0 right-0 z-10 flex justify-center pointer-events-none">
+              <div className="rounded-full bg-black/60 px-5 py-2 text-xs font-black uppercase tracking-widest text-white backdrop-blur-md border border-white/10 shadow-xl">
+                Align QR Code
+              </div>
+            </div>
+          </div>
         </div>
-      ) : (
-        <button type="button" disabled={disabled || starting} onClick={openCamera} className="portal-secondary w-full justify-center py-3">
-          {starting ? <Loader2 className="animate-spin" size={18} /> : <Camera size={18} />}
-          {starting ? 'Checking camera…' : 'Open camera scanner'}
-        </button>
       )}
       <form onSubmit={manualSubmit} className="relative">
         <Keyboard className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-on-surface-variant)]" size={18} />

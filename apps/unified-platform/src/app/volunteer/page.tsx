@@ -3,6 +3,7 @@ import { BadgeCheck, QrCode, ScanLine, Users } from 'lucide-react'
 import { getSession } from '@/lib/auth'
 import { platformStore } from '@/server/data'
 import { ParticipantSearch } from '@/components/volunteer/ParticipantSearch'
+import { ScanModal } from '@/components/volunteer/ScanModal'
 import { SectionHeading } from '@/components/portal/PortalShell'
 import { SlotProgressBar } from '@/components/dashboard/SlotProgressBar'
 import { LiveFeed } from '@/components/dashboard/LiveFeed'
@@ -49,11 +50,11 @@ export default async function VolunteerPage() {
           <h2 className="text-xl font-black">QR assignment</h2>
           <p className="mt-2 text-sm text-[var(--color-on-surface-variant)]">Find a registered participant—or add one—then scan an available QR.</p>
         </Link>
-        <Link href="/volunteer/verify" className="group rounded-3xl border border-orange-100 bg-gradient-to-br from-orange-50 to-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-          <ScanLine className="mb-5 text-[var(--color-primary)]" size={30} />
-          <h2 className="text-xl font-black">Food verification</h2>
-          <p className="mt-2 text-sm text-[var(--color-on-surface-variant)]">Scan an assigned participant QR against the currently active meal slot.</p>
-        </Link>
+        <ScanModal 
+          hasActiveSlot={Boolean(data.activeSlot)}
+          initialScannedByMe={data.scannedByMe}
+          initialVerifiedByMe={data.verifiedByMe}
+        />
       </div>
 
       <div className="grid gap-6 xl:grid-cols-2">
