@@ -48,7 +48,7 @@ export default async function VolunteerPage() {
         <Link href="/volunteer/assign" className="group rounded-3xl border border-purple-100 bg-gradient-to-br from-purple-50 to-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
           <QrCode className="mb-5 text-purple-700" size={30} />
           <h2 className="text-xl font-black">QR assignment</h2>
-          <p className="mt-2 text-sm text-[var(--color-on-surface-variant)]">Find a registered participant—or add one—then scan an available QR.</p>
+          <p className="mt-2 text-sm text-[var(--color-on-surface-variant)]">Find a registered participant—or add one—then scan a valid QR. New UIDs are saved when assigned.</p>
         </Link>
         <ScanModal 
           hasActiveSlot={Boolean(data.activeSlot)}

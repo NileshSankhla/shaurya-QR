@@ -1,6 +1,6 @@
 'use client'
 
-import { FormEvent, useState, useTransition } from 'react'
+import { FormEvent, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { CalendarPlus, CirclePause, CirclePlay, Clock3, RotateCcw, Trash2 } from 'lucide-react'
 import {
@@ -26,15 +26,27 @@ export function SlotManager({ slots }: { slots: Slot[] }) {
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [form, setForm] = useState({ dayLabel: '', eventDate: '', title: '', startTime: '', endTime: '' })
+  const operationInFlight = useRef(false)
 
-  function execute(operation: () => Promise<{ ok: boolean; error?: string }>, success: string) {
+  function execute(
+    operation: () => Promise<{ ok: boolean; error?: string }>,
+    success: string,
+    onSuccess?: () => void,
+  ) {
+    if (operationInFlight.current) return
+    operationInFlight.current = true
     setError('')
     setNotice('')
     startTransition(async () => {
-      const result = await operation()
-      if (!result.ok) return setError(result.error ?? 'Operation failed')
-      setNotice(success)
-      router.refresh()
+      try {
+        const result = await operation()
+        if (!result.ok) return setError(result.error ?? 'Operation failed')
+        onSuccess?.()
+        setNotice(success)
+        router.refresh()
+      } finally {
+        operationInFlight.current = false
+      }
     })
   }
 
@@ -45,6 +57,7 @@ export function SlotManager({ slots }: { slots: Slot[] }) {
     execute(
       () => adminCreateSlotAction({ ...form, startTime: start, endTime: end }),
       'Food slot created',
+      () => setForm({ dayLabel: '', eventDate: '', title: '', startTime: '', endTime: '' }),
     )
   }
 

@@ -4,14 +4,15 @@ One role-protected Next.js application for master administrators and volunteers.
 
 ## Capabilities
 
-- Master admin analytics for participants, colleges, QR inventory, slots, scan
+- Master admin analytics for participants, colleges, QR usage, slots, scan
   attempts, successful verifications, and per-volunteer performance.
 - Admin management of admins, volunteers, participants, QR assignment, and food
   slot start/pause/close controls, including staff edit/remove/restore and role
   changes.
 - Field-specific participant search, assignment/status filters, sorting, and a
   retained participant timeline for QR, account, scan, and meal activity.
-- Volunteer QR assignment with search-only access and transactional QR claiming.
+- Volunteer QR assignment with search-only access and transactional, on-demand
+  QR registration and claiming. Valid QR UIDs do not need to be preloaded.
 - Volunteer food verification with one meal per participant per active slot.
 - Signed HttpOnly sessions and scrypt password hashing.
 - Public registration API used by the separate static registration site.
@@ -45,7 +46,11 @@ it on a plain HTTP LAN address.
 
 The registration site must be listed in REGISTRATION_ORIGINS.
 
-Provider-neutral import commands:
+Participant import command:
+
+    npm run import:participants -- /path/to/participants.csv
+
+The QR import command remains available for legacy/preloaded batches, but it is
+optional because a valid UID is now saved atomically on its first assignment:
 
     npm run import:qrs -- /path/to/qr_codes.json
-    npm run import:participants -- /path/to/participants.csv

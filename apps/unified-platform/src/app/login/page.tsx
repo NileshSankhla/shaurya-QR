@@ -34,7 +34,7 @@ export default function LoginPage() {
       <div className="relative w-full max-w-md rounded-[36px] border border-white/80 bg-white/90 p-7 shadow-2xl shadow-black/10 backdrop-blur-md md:p-9">
         <div className="mb-8 text-center">
           <span className="relative mx-auto mb-4 block h-20 w-20 rounded-3xl bg-orange-50">
-            <Image src="/logo.png" alt="Shaurya" fill className="object-contain p-2" />
+            <Image src="/logo.png" alt="Shaurya" fill sizes="80px" className="object-contain p-2" />
           </span>
           <h1 className="font-[family-name:var(--font-display)] text-2xl font-black">SHAURYA OPERATIONS</h1>
           <p className="mt-1 text-sm text-[var(--color-on-surface-variant)]">Admin and volunteer secure login</p>

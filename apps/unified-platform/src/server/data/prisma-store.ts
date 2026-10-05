@@ -12,6 +12,7 @@ import type {
   StaffUpdateInput,
   VolunteerHome,
 } from "./contracts";
+import { claimQr } from "./qr-claim";
 import { activeFoodSlotWhere } from "./slot-policy";
 
 function guestResult(guest: {
@@ -215,26 +216,7 @@ export class PrismaPlatformStore implements PlatformStore {
     if (guest.qrCard)
       throw new Error(`Participant already has QR ${guest.qrCard.uid}`);
 
-    const card = await tx.qrCard.findUnique({
-      where: { uid: token },
-      include: { guest: { select: { name: true } } },
-    });
-    if (!card) throw new Error("QR code was not found in the inventory");
-    if (card.guestId || card.status === "ASSIGNED") {
-      const owner = card.guest?.name ? ` to ${card.guest.name}` : "";
-      throw new Error(`QR code ${token} is already assigned${owner}`);
-    }
-    if (card.status !== "AVAILABLE")
-      throw new Error(`QR code ${token} is not available`);
-
-    const claimed = await tx.qrCard.updateMany({
-      where: { uid: token, status: "AVAILABLE", guestId: null },
-      data: { status: "ASSIGNED", guestId },
-    });
-    if (claimed.count !== 1)
-      throw new Error(
-        "That QR was assigned by another operator. Scan a different QR.",
-      );
+    await claimQr(tx, token, guestId);
 
     await tx.guest.update({
       where: { id: guestId },
@@ -860,14 +842,37 @@ export class PrismaPlatformStore implements PlatformStore {
     if (endTime <= startTime)
       throw new Error("End time must be after start time");
 
-    const day = await prisma.foodDay.upsert({
-      where: { eventDate },
-      update: { label: input.dayLabel.trim() },
-      create: { eventDate, label: input.dayLabel.trim() },
-    });
-    await prisma.foodSlot.create({
-      data: { dayId: day.id, title: input.title.trim(), startTime, endTime },
-    });
+    const title = input.title.trim();
+    const dayLabel = input.dayLabel.trim();
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      try {
+        await prisma.$transaction(
+          async (tx) => {
+            const day = await tx.foodDay.upsert({
+              where: { eventDate },
+              update: { label: dayLabel },
+              create: { eventDate, label: dayLabel },
+            });
+            const duplicate = await tx.foodSlot.findFirst({
+              where: { dayId: day.id, title, startTime, endTime },
+              select: { id: true },
+            });
+            if (duplicate)
+              throw new Error(
+                "Slot already exists for this day, meal, and time",
+              );
+            await tx.foodSlot.create({
+              data: { dayId: day.id, title, startTime, endTime },
+            });
+          },
+          { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+        );
+        return;
+      } catch (error) {
+        const code = (error as { code?: string }).code;
+        if (code !== "P2034" || attempt === 1) throw error;
+      }
+    }
   }
 
   async setSlotStatus(
