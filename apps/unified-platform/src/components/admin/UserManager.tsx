@@ -246,7 +246,9 @@ export function UserManager({
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <Link href={`/admin/users/${guest.id}`} className="font-bold hover:text-[var(--color-primary)] hover:underline">{guest.name}</Link>
+                    <Link href={`/admin/users/${guest.id}`} className="font-bold hover:text-[var(--color-primary)] hover:underline">
+                      {guest.name} {guest.qrToken ? `(${guest.qrToken})` : ''}
+                    </Link>
                     <span className={`rounded-full px-2 py-0.5 text-[10px] font-black ${guest.active ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>{guest.active ? guest.status : 'REMOVED'}</span>
                   </div>
                   <p className="mt-1 text-xs text-[var(--color-on-surface-variant)]">{guest.college} · {guest.mobile} · {guest.email}</p>
