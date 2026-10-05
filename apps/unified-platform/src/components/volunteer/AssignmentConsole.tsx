@@ -106,8 +106,8 @@ export function AssignmentConsole() {
       </div>
 
       <aside className="h-fit rounded-3xl border border-[var(--color-surface-variant)] bg-white p-5 shadow-sm xl:sticky xl:top-24">
-        <h2 className="mb-1 font-black">2. Scan an available QR</h2>
-        <p className="mb-4 text-xs text-[var(--color-on-surface-variant)]">{selected ? `Assigning to ${selected.name}` : 'Select a registered participant first'}</p>
+        <h2 className="mb-1 font-black">2. Scan a valid QR</h2>
+        <p className="mb-4 text-xs text-[var(--color-on-surface-variant)]">{selected ? `Assigning to ${selected.name}. New QR UIDs are saved automatically.` : 'Select a registered participant first'}</p>
         {selected?.qrToken ? (
           <div className="rounded-2xl bg-green-50 p-5 text-center text-green-800"><CheckCircle2 className="mx-auto mb-2" /><p className="font-bold">Already assigned</p><p className="mt-1 font-mono text-sm">{selected.qrToken}</p></div>
         ) : (

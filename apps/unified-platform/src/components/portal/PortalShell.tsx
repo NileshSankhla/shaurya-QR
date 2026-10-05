@@ -48,7 +48,7 @@ export function PortalShell({
       <aside className="hidden md:flex sticky top-0 h-screen flex-col border-r border-[var(--color-surface-variant)] bg-white px-4 py-5">
         <Link href={role === 'ADMIN' ? '/admin' : '/volunteer'} className="flex items-center gap-3 px-2">
           <span className="relative h-11 w-11 overflow-hidden rounded-2xl bg-orange-50">
-            <Image src="/logo.png" alt="Shaurya" fill className="object-contain p-1.5" />
+            <Image src="/logo.png" alt="Shaurya" fill sizes="44px" className="object-contain p-1.5" />
           </span>
           <span>
             <strong className="block font-[family-name:var(--font-display)] text-lg">SHAURYA</strong>
@@ -97,7 +97,7 @@ export function PortalShell({
         <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-[var(--color-surface-variant)] bg-white/90 px-4 backdrop-blur md:px-8">
           <div className="flex items-center gap-3 md:hidden">
             <span className="relative h-9 w-9">
-              <Image src="/logo.png" alt="Shaurya" fill className="object-contain" />
+              <Image src="/logo.png" alt="Shaurya" fill sizes="36px" className="object-contain" />
             </span>
             <div>
               <p className="text-sm font-black">SHAURYA</p>

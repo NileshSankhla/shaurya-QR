@@ -47,7 +47,7 @@ const METRICS = [
   },
   {
     key: "availableQrs",
-    label: "QR available",
+    label: "Reusable QRs",
     icon: CircleGauge,
     color: "text-cyan-700 bg-cyan-50",
   },

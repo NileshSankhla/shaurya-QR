@@ -1,6 +1,6 @@
 'use client'
 
-import { FormEvent, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import QrScanner from 'qr-scanner'
 import { Camera, CameraOff, Keyboard, Loader2 } from 'lucide-react'
 
@@ -80,10 +80,6 @@ export function QrCapture({
     }
   }, [cameraOpen, disabled])
 
-  function manualSubmit(event: FormEvent) {
-    event.preventDefault()
-  }
-
   async function openCamera() {
     setCameraError('')
     if (!window.isSecureContext) {
@@ -151,7 +147,7 @@ export function QrCapture({
           </div>
         </div>
       )}
-      <form onSubmit={manualSubmit} className="relative">
+      <div className="relative">
         <Keyboard className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-on-surface-variant)]" size={18} />
         <input
           className="portal-input pl-11 font-mono uppercase"
@@ -160,7 +156,7 @@ export function QrCapture({
           value={value}
           onChange={(event) => onChange(event.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, ''))}
         />
-      </form>
+      </div>
       {cameraError && <p className="text-xs font-bold text-red-700">{cameraError}</p>}
     </div>
   )

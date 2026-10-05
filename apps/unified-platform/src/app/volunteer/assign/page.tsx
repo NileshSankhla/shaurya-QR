@@ -6,7 +6,7 @@ export default function AssignPage() {
     <>
       <SectionHeading
         title="QR assignment"
-        description="Search a registered participant or add a new one, then scan an unassigned QR to link it safely."
+        description="Search a registered participant or add a new one, then scan a valid unassigned QR. New UIDs are saved automatically."
       />
       <AssignmentConsole />
     </>
