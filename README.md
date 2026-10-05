@@ -28,6 +28,7 @@
 * **Role-Based Access Control (RBAC):** Distinct dashboards and capabilities for `ADMIN` and `VOLUNTEER` roles.
 * **Live QR Scanner:** Built-in mobile camera integration to instantly scan, decode, and verify QR tokens.
 * **Real-time Live Feed:** A live, localized stream of recent scan activities (successes and failures) directly on the volunteer dashboard.
+* **Installable PWA:** Standards-based manifest, platform icons, update handling, connection status, and a safe offline fallback without caching protected operational data.
 
 ### 👑 Administrator Dashboard
 * **Live Overview Metrics:** High-level statistics of Active Participants, Assigned QRs, Verified Meals, and Active Staff.
@@ -36,7 +37,7 @@
 * **Team Management:** Add, edit, remove, and monitor volunteer performance seamlessly.
 
 ### ⚙️ Backend & Database Capabilities
-* **Parallel Data Fetching:** Optimized connection pooling and `Promise.all` logic to drop database latency from seconds to milliseconds.
+* **Pool-Aware Data Fetching:** Related dashboard reads use batched Prisma transactions so low-limit transaction poolers are not flooded by one request.
 * **Strict Constraints:** PostgreSQL enforces uniqueness on `[guestId, slotId]` to physically prevent duplicate meal entries at the database level.
 
 ---
@@ -63,15 +64,15 @@
 
 ## 4. 🔐 Registration & Authentication Flow
 
-* **Registration:** Public-facing form built with controlled React inputs. Server Actions validate the inputs on the backend, ensuring mobile/email uniqueness before writing to the database.
+* **Registration:** The public static form calls a restricted-origin API. Inputs are validated on the server, with database constraints enforcing mobile/email uniqueness.
 * **Staff Authentication:** 
   * Volunteers and Admins log in using a username and password.
-  * The backend verifies the credentials and uses `jose` to cryptographically sign a **JWT (JSON Web Token)**.
-  * This JWT is stored securely as an HTTP-only browser cookie (`shaurya_session`).
+  * Passwords are verified with scrypt and the backend creates a signed, expiring session payload.
+  * The signed session is stored in a secure, same-site, HTTP-only browser cookie (`shaurya_session`).
 * **Session Handling:** 
-  * Every protected route uses Next.js Middleware to verify the JWT signature before rendering the page.
-  * React `cache()` is utilized to prevent redundant database lookups for the authenticated user during complex nested layout renders.
-* **Security Practices:** No passwords or secrets are ever exposed to the client. Passwords are securely hashed, and JWT secrets are kept strictly in the server environment.
+  * Next.js Proxy performs the fast cookie-presence redirect for protected routes.
+  * Protected layouts and every server action verify the signature and fresh-read the staff record, invalidating disabled accounts immediately.
+* **Security Practices:** Passwords and secrets remain server-only. Responses include clickjacking, MIME-sniffing, referrer, and browser-permission protections.
 
 ---
 
@@ -79,12 +80,13 @@
 
 | Category | Technology | Purpose |
 |----------|------------|---------|
-| **Frontend** | Next.js 15 (App Router) | Core React framework for SSR and UI rendering |
+| **Frontend** | Next.js 16 + React 19 (App Router) | Core framework for server rendering and interactive UI |
 | **Styling** | Tailwind CSS | Utility-first CSS for a custom, modern design system |
 | **Backend** | Next.js Server Actions | Server-side API logic without traditional endpoints |
 | **Database** | PostgreSQL (Supabase) | Relational database for strict data integrity |
 | **ORM** | Prisma | Type-safe database queries and schema management |
-| **Auth** | Jose (JWT) & bcrypt | Secure session management and password hashing |
+| **Auth** | HMAC-signed sessions + scrypt | Secure session management and password hashing |
+| **PWA** | Web App Manifest + Service Worker | Installability, updates, static asset caching, and safe offline fallback |
 | **Icons** | Lucide React | Clean, consistent, and lightweight iconography |
 
 ---
@@ -131,7 +133,7 @@ cd shaurya-QR/apps/unified-platform
 ## 8. 💻 Local Development Setup
 
 ### Prerequisites
-* **Node.js**: v18.x or higher
+* **Node.js**: v20.9 or higher
 * **Package Manager**: npm (v9+)
 * **Database**: A PostgreSQL connection URI (e.g., local Postgres or Supabase)
 
@@ -148,7 +150,7 @@ cd shaurya-QR/apps/unified-platform
    # .env
    DATABASE_URL="postgresql://user:password@host:port/dbname?connection_limit=5"
    DIRECT_URL="postgresql://user:password@host:port/dbname"
-   JWT_SECRET="generate-a-secure-random-string"
+   AUTH_SECRET="generate-a-secure-random-string"
    ```
 
 3. **Database Setup (Prisma):**
@@ -166,6 +168,11 @@ cd shaurya-QR/apps/unified-platform
    ```
    The application will now be running on `http://localhost:3000`.
 
+5. **Run the complete verification suite:**
+   ```bash
+   npm run verify
+   ```
+
 ---
 
 ## 9. 📂 Folder Structure & Key Files
@@ -179,7 +186,7 @@ cd shaurya-QR/apps/unified-platform
 
 ## 10. 🔒 Security Considerations
 
-* **Route Protection:** Next.js Middleware intercepts all requests to `/admin` and `/volunteer`. If a valid JWT is not present, the user is instantly redirected to `/login` before the server even renders the page.
+* **Route Protection:** Next.js Proxy performs an early cookie check for `/admin` and `/volunteer`; layouts and server actions then validate the signed session and current database-backed staff access.
 * **Input Validation:** Server actions strictly validate inputs before executing database queries to prevent bad data.
 * **Database Security:** `PgBouncer` or Prisma connection pooling is utilized via `connection_limit=5` in the `.env` to prevent the database from crashing under high traffic loads.
 * **Idempotency:** Webhook and scan verification logic uses strict database constraints (unique indexes) to ensure that if two volunteers scan the same QR code at the exact same millisecond, only one transaction succeeds, preventing duplicate meals.
@@ -188,14 +195,14 @@ cd shaurya-QR/apps/unified-platform
 
 ## 11. ☁️ Deployment Guide
 
-This application is optimized for Serverless Edge deployment on platforms like Vercel.
+This application is optimized for a Node.js serverless deployment on platforms like Vercel. Prisma-backed routes are not Edge-runtime routes.
 
 **Deploying to Vercel:**
 1. Push your code to a GitHub repository.
 2. Log into Vercel and click **Add New Project**.
 3. Import your GitHub repository.
 4. Set the **Framework Preset** to Next.js.
-5. In the **Environment Variables** section, add your `DATABASE_URL`, `DIRECT_URL`, and `JWT_SECRET`.
+5. In the **Environment Variables** section, add your `DATABASE_URL`, `DIRECT_URL`, and `AUTH_SECRET`.
 6. Click **Deploy**.
 
 **Database Deployment:**

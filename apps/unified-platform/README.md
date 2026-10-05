@@ -15,6 +15,9 @@ One role-protected Next.js application for master administrators and volunteers.
 - Volunteer food verification with one meal per participant per active slot.
 - Signed HttpOnly sessions and scrypt password hashing.
 - Public registration API used by the separate static registration site.
+- Installable PWA with 192/512/maskable icons, update notifications, connection
+  status, security headers, and a safe offline fallback. Protected pages and API
+  responses are deliberately network-only and are never stored by the service worker.
 
 ## Database boundary
 
@@ -31,6 +34,10 @@ PlatformStore adapter; UI and domain workflows do not import Supabase.
    existing prototype database, or run npm run db:push for a fresh database.
 5. Set BOOTSTRAP_ADMIN_PASSWORD and run npm run db:seed.
 6. Run npm run dev.
+
+Before deployment, run `npm run verify` from the repository root. It executes
+strict type checking, ESLint, regression tests, Prisma generation, and the
+production build.
 
 Use `npm run dev:https` when testing the QR camera from a phone or another
 device. Browsers permit camera access on localhost or HTTPS, but normally block

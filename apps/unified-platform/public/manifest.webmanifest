@@ -1,0 +1,51 @@
+{
+  "name": "Shaurya Operations",
+  "short_name": "Shaurya",
+  "description": "Secure QR assignment and food verification for Shaurya operations.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f9f9f9",
+  "theme_color": "#964900",
+  "lang": "en-IN",
+  "dir": "ltr",
+  "categories": ["business", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Verify food",
+      "short_name": "Verify",
+      "description": "Open the food verification scanner",
+      "url": "/volunteer/verify",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Assign QR",
+      "short_name": "Assign",
+      "description": "Assign a QR card to a participant",
+      "url": "/volunteer/assign",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ]
+}

@@ -39,9 +39,11 @@ export function QrCapture({
   const [cameraError, setCameraError] = useState('')
   const [starting, setStarting] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
-  const scannerRef = useRef<QrScanner | null>(null)
   const onChangeRef = useRef(onChange)
-  onChangeRef.current = onChange
+
+  useEffect(() => {
+    onChangeRef.current = onChange
+  }, [onChange])
 
   useEffect(() => {
     if (!cameraOpen || !videoRef.current || disabled) return
@@ -66,7 +68,6 @@ export function QrCapture({
         returnDetailedScanResult: true,
       },
     )
-    scannerRef.current = scanner
     scanner.start()
       .catch(() => {
         setCameraError('Camera access failed. Check permission or enter the token manually.')
@@ -76,7 +77,6 @@ export function QrCapture({
     return () => {
       scanner.stop()
       scanner.destroy()
-      scannerRef.current = null
     }
   }, [cameraOpen, disabled])
 
