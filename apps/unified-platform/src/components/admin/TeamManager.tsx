@@ -2,7 +2,7 @@
 
 import { FormEvent, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Pencil, ShieldCheck, UserMinus, UserPlus, UserRoundCheck, Users, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Pencil, ShieldCheck, UserMinus, UserPlus, UserRoundCheck, Users, X } from 'lucide-react'
 import { adminCreateStaffAction, adminSetStaffActiveAction, adminUpdateStaffAction } from '@/app/actions'
 import type { StaffRole } from '@/lib/auth'
 
@@ -23,6 +23,14 @@ export function TeamManager({ members, currentStaffId }: { members: Member[]; cu
   const [editing, setEditing] = useState<string | null>(null)
   const [removeTarget, setRemoveTarget] = useState<string | null>(null)
   const [editForm, setEditForm] = useState({ name: '', username: '', password: '', role: 'VOLUNTEER' as StaffRole })
+  
+  const [currentPage, setCurrentPage] = useState(1)
+  const pageSize = 10
+  const totalPages = Math.ceil(members.length / pageSize)
+  const safePage = Math.max(1, Math.min(currentPage, totalPages))
+  const startIndex = (safePage - 1) * pageSize
+  const visibleMembers = members.slice(startIndex, startIndex + pageSize)
+  const pages = Array.from({ length: totalPages }, (_, i) => i + 1)
 
   function submit(event: FormEvent) {
     event.preventDefault()
@@ -112,7 +120,7 @@ export function TeamManager({ members, currentStaffId }: { members: Member[]; cu
         {error && <p className="mb-3 rounded-xl bg-red-50 p-3 text-xs font-bold text-red-700">{error}</p>}
         {success && <p className="mb-3 rounded-xl bg-green-50 p-3 text-xs font-bold text-green-700">{success}</p>}
         <div className="space-y-2">
-          {members.map((member) => (
+          {visibleMembers.map((member) => (
             <div key={member.id} className="rounded-2xl bg-[var(--color-surface-container)] p-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
@@ -165,6 +173,40 @@ export function TeamManager({ members, currentStaffId }: { members: Member[]; cu
             </div>
           ))}
         </div>
+
+        {totalPages > 1 && (
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-1">
+            <button 
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={safePage === 1}
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--color-surface-variant)] bg-white text-[var(--color-on-surface-variant)] disabled:opacity-50"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            
+            {pages.map(p => (
+              <button
+                key={p}
+                onClick={() => setCurrentPage(p)}
+                className={`flex h-8 w-8 items-center justify-center rounded-lg border text-sm font-bold transition-colors ${
+                  safePage === p 
+                    ? 'border-[var(--color-primary)] bg-[var(--color-primary)] text-white' 
+                    : 'border-[var(--color-surface-variant)] bg-white text-[var(--color-on-surface-variant)] hover:bg-[var(--color-surface-container)]'
+                }`}
+              >
+                {p}
+              </button>
+            ))}
+
+            <button 
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={safePage === totalPages}
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--color-surface-variant)] bg-white text-[var(--color-on-surface-variant)] disabled:opacity-50"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        )}
       </section>
     </div>
   )
