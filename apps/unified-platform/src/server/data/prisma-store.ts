@@ -321,8 +321,16 @@ export class PrismaPlatformStore implements PlatformStore {
 
   async verifyMeal(rawToken: string, volunteerId: string) {
     const qrToken = rawToken.trim().toUpperCase();
+    const now = new Date();
     const activeSlot = await prisma.foodSlot.findFirst({
-      where: { status: "ACTIVE" },
+      where: {
+        status: { notIn: ["PAUSED", "COMPLETED"] },
+        endTime: { gt: now },
+        OR: [
+          { status: "ACTIVE" },
+          { startTime: { lte: now } }
+        ]
+      },
       orderBy: { updatedAt: "desc" },
     });
     const card = await prisma.qrCard.findUnique({
@@ -391,7 +399,14 @@ export class PrismaPlatformStore implements PlatformStore {
           where: { volunteerId: staffId, successful: true },
         }),
         prisma.foodSlot.findFirst({
-          where: { status: "ACTIVE" },
+          where: {
+            status: { notIn: ["PAUSED", "COMPLETED"] },
+            endTime: { gt: new Date() },
+            OR: [
+              { status: "ACTIVE" },
+              { startTime: { lte: new Date() } }
+            ]
+          },
           orderBy: { updatedAt: "desc" },
           select: {
             id: true,
@@ -404,7 +419,7 @@ export class PrismaPlatformStore implements PlatformStore {
         }),
         prisma.scanEvent.findMany({
           where: { volunteerId: staffId },
-          take: 8,
+          take: 50,
           orderBy: { createdAt: "desc" },
           include: {
             guest: { select: { name: true } },
@@ -439,7 +454,7 @@ export class PrismaPlatformStore implements PlatformStore {
   }
 
   async getAdminOverview(recentPage = 1): Promise<AdminOverview> {
-    const activityPageSize = 10;
+    const activityPageSize = 100;
     const safeRecentPage = Math.max(1, Math.floor(recentPage));
     const [
       summaryRows,
@@ -461,7 +476,14 @@ export class PrismaPlatformStore implements PlatformStore {
           (SELECT COUNT(*) FROM "volunteers" WHERE "active" = true) AS "activeVolunteers"
       `,
       prisma.foodSlot.findFirst({
-        where: { status: "ACTIVE" },
+        where: {
+          status: { notIn: ["PAUSED", "COMPLETED"] },
+          endTime: { gt: new Date() },
+          OR: [
+            { status: "ACTIVE" },
+            { startTime: { lte: new Date() } }
+          ]
+        },
         orderBy: { updatedAt: "desc" },
         select: {
           id: true,
