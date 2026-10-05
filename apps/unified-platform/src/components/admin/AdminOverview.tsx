@@ -4,6 +4,8 @@ import { useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   BadgeCheck,
+  ChevronLeft,
+  ChevronRight,
   CircleGauge,
   QrCode,
   ScanLine,
@@ -88,7 +90,7 @@ export function AdminOverview({ data }: { data: AdminOverviewData }) {
     reason: item.reason ?? undefined,
   }));
   const goToActivityPage = (page: number) => {
-    router.push(`/admin?activityPage=${page}`);
+    startRefresh(() => router.push(`/admin?activityPage=${page}`, { scroll: false }));
   };
 
   return (
@@ -199,6 +201,32 @@ export function AdminOverview({ data }: { data: AdminOverviewData }) {
           Live verification activity
         </h2>
         <LiveFeed items={liveFeed} pageSize={10} />
+        {data.recentPages > 1 && (
+          <nav
+            aria-label="Verification activity pages"
+            className="mt-4 flex items-center justify-center gap-3"
+          >
+            <button
+              type="button"
+              className="portal-small"
+              disabled={isRefreshing || data.recentPage <= 1}
+              onClick={() => goToActivityPage(data.recentPage - 1)}
+            >
+              <ChevronLeft size={16} /> Previous
+            </button>
+            <span className="text-xs font-bold text-[var(--color-on-surface-variant)]">
+              Page {Math.min(data.recentPage, data.recentPages)} of {data.recentPages}
+            </span>
+            <button
+              type="button"
+              className="portal-small"
+              disabled={isRefreshing || data.recentPage >= data.recentPages}
+              onClick={() => goToActivityPage(data.recentPage + 1)}
+            >
+              Next <ChevronRight size={16} />
+            </button>
+          </nav>
+        )}
       </section>
     </div>
   );

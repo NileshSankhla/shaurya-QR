@@ -3,8 +3,6 @@ import { AdminOverview } from "@/components/admin/AdminOverview";
 import { SectionHeading } from "@/components/portal/PortalShell";
 import { platformStore } from "@/server/data";
 
-export const revalidate = 60; // 1 minute caching
-
 async function DashboardData({ recentPage }: { recentPage: number }) {
   const data = await platformStore.getAdminOverview(recentPage);
   return <AdminOverview data={data} />;

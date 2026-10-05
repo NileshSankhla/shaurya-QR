@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useTransition } from 'react'
+import { useOptimistic, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { CheckCircle2, ShieldAlert, XCircle } from 'lucide-react'
 import { verifyScanAction } from '@/app/actions'
@@ -26,13 +26,13 @@ export function VerificationConsole({
   const [token, setToken] = useState('')
   const [result, setResult] = useState<VerificationResult | null>(null)
   const [error, setError] = useState('')
-  const [scannedByMe, setScannedByMe] = useState(initialScannedByMe)
-  const [verifiedByMe, setVerifiedByMe] = useState(initialVerifiedByMe)
-
-  useEffect(() => {
-    setScannedByMe(initialScannedByMe)
-    setVerifiedByMe(initialVerifiedByMe)
-  }, [initialScannedByMe, initialVerifiedByMe])
+  const [counts, recordAttempt] = useOptimistic(
+    { scanned: initialScannedByMe, verified: initialVerifiedByMe },
+    (current, verified: boolean) => ({
+      scanned: current.scanned + 1,
+      verified: current.verified + (verified ? 1 : 0),
+    }),
+  )
 
   function verify() {
     setError('')
@@ -40,8 +40,7 @@ export function VerificationConsole({
     startTransition(async () => {
       const response = await verifyScanAction(token)
       if (response.attemptRecorded) {
-        setScannedByMe((count) => count + 1)
-        if (response.ok) setVerifiedByMe((count) => count + 1)
+        recordAttempt(response.ok)
         router.refresh()
       }
       if (!response.ok) {
@@ -56,8 +55,8 @@ export function VerificationConsole({
   return (
     <>
       <div className="mb-6 grid grid-cols-2 gap-3 text-center" aria-live="polite">
-        <div className="rounded-2xl bg-white p-3"><p className="text-xl font-black">{scannedByMe}</p><p className="text-[10px] font-bold uppercase text-[var(--color-on-surface-variant)]">My attempts</p></div>
-        <div className="rounded-2xl bg-white p-3"><p className="text-xl font-black text-green-700">{verifiedByMe}</p><p className="text-[10px] font-bold uppercase text-[var(--color-on-surface-variant)]">My verified</p></div>
+        <div className="rounded-2xl bg-white p-3"><p className="text-xl font-black">{counts.scanned}</p><p className="text-[10px] font-bold uppercase text-[var(--color-on-surface-variant)]">My attempts</p></div>
+        <div className="rounded-2xl bg-white p-3"><p className="text-xl font-black text-green-700">{counts.verified}</p><p className="text-[10px] font-bold uppercase text-[var(--color-on-surface-variant)]">My verified</p></div>
       </div>
       <div className="mx-auto max-w-xl">
         {!hasActiveSlot && (

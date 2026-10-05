@@ -1,5 +1,7 @@
 .DS_Store
 **/.DS_Store
+node_modules/
+**/node_modules/
 backend/participants - Sheet1.csv
 backend/shaurya-qr-codes/MASTER_QR_LIST.csv
 backend/qr_codes_db_import.json

@@ -12,6 +12,7 @@ import type {
   StaffUpdateInput,
   VolunteerHome,
 } from "./contracts";
+import { activeFoodSlotWhere } from "./slot-policy";
 
 function guestResult(guest: {
   id: string;
@@ -48,6 +49,11 @@ type AdminSummaryCounts = {
   availableQrs: bigint;
   verifiedMeals: bigint;
   activeVolunteers: bigint;
+};
+
+type AdminCumulativeRow = {
+  label: string;
+  value: bigint;
 };
 
 function normalizeGuest(input: GuestInput) {
@@ -323,14 +329,7 @@ export class PrismaPlatformStore implements PlatformStore {
     const qrToken = rawToken.trim().toUpperCase();
     const now = new Date();
     const activeSlot = await prisma.foodSlot.findFirst({
-      where: {
-        status: { notIn: ["PAUSED", "COMPLETED"] },
-        endTime: { gt: now },
-        OR: [
-          { status: "ACTIVE" },
-          { startTime: { lte: now } }
-        ]
-      },
+      where: activeFoodSlotWhere(now),
       orderBy: { updatedAt: "desc" },
     });
     const card = await prisma.qrCard.findUnique({
@@ -391,22 +390,16 @@ export class PrismaPlatformStore implements PlatformStore {
   }
 
   async getVolunteerHome(staffId: string): Promise<VolunteerHome> {
+    const now = new Date();
     const [totalGuests, scannedByMe, verifiedByMe, activeSlot, recent] =
-      await Promise.all([
+      await prisma.$transaction([
         prisma.guest.count({ where: { active: true } }),
         prisma.scanEvent.count({ where: { volunteerId: staffId } }),
         prisma.scanEvent.count({
           where: { volunteerId: staffId, successful: true },
         }),
         prisma.foodSlot.findFirst({
-          where: {
-            status: { notIn: ["PAUSED", "COMPLETED"] },
-            endTime: { gt: new Date() },
-            OR: [
-              { status: "ACTIVE" },
-              { startTime: { lte: new Date() } }
-            ]
-          },
+          where: activeFoodSlotWhere(now),
           orderBy: { updatedAt: "desc" },
           select: {
             id: true,
@@ -454,8 +447,9 @@ export class PrismaPlatformStore implements PlatformStore {
   }
 
   async getAdminOverview(recentPage = 1): Promise<AdminOverview> {
-    const activityPageSize = 100;
+    const activityPageSize = 10;
     const safeRecentPage = Math.max(1, Math.floor(recentPage));
+    const now = new Date();
     const [
       summaryRows,
       activeSlot,
@@ -465,8 +459,8 @@ export class PrismaPlatformStore implements PlatformStore {
       performanceGroups,
       recent,
       recentCount,
-      entries,
-    ] = await Promise.all([
+      cumulativeRows,
+    ] = await prisma.$transaction([
       prisma.$queryRaw<AdminSummaryCounts[]>`
         SELECT
           (SELECT COUNT(*) FROM "users" WHERE "active" = true) AS "guests",
@@ -476,14 +470,7 @@ export class PrismaPlatformStore implements PlatformStore {
           (SELECT COUNT(*) FROM "volunteers" WHERE "active" = true) AS "activeVolunteers"
       `,
       prisma.foodSlot.findFirst({
-        where: {
-          status: { notIn: ["PAUSED", "COMPLETED"] },
-          endTime: { gt: new Date() },
-          OR: [
-            { status: "ACTIVE" },
-            { startTime: { lte: new Date() } }
-          ]
-        },
+        where: activeFoodSlotWhere(now),
         orderBy: { updatedAt: "desc" },
         select: {
           id: true,
@@ -493,9 +480,9 @@ export class PrismaPlatformStore implements PlatformStore {
         },
       }),
       prisma.guest.groupBy({
-        by: ["college"],
+        by: ["college"] as const,
         where: { active: true },
-        _count: { id: true },
+        _count: { id: true } as const,
         orderBy: { _count: { id: "desc" } },
       }),
       prisma.foodSlot.findMany({
@@ -511,8 +498,9 @@ export class PrismaPlatformStore implements PlatformStore {
         orderBy: [{ role: "asc" }, { name: "asc" }],
       }),
       prisma.scanEvent.groupBy({
-        by: ["volunteerId", "successful"],
-        _count: { _all: true },
+        by: ["volunteerId", "successful"] as const,
+        _count: { _all: true } as const,
+        orderBy: [{ volunteerId: "asc" }, { successful: "asc" }],
       }),
       prisma.scanEvent.findMany({
         skip: (safeRecentPage - 1) * activityPageSize,
@@ -525,11 +513,20 @@ export class PrismaPlatformStore implements PlatformStore {
         },
       }),
       prisma.scanEvent.count(),
-      prisma.foodEntry.findMany({
-        take: 1000,
-        orderBy: { scannedAt: "desc" },
-        select: { scannedAt: true },
-      }),
+      prisma.$queryRaw<AdminCumulativeRow[]>`
+        WITH daily AS (
+          SELECT
+            ("scanned_at" AT TIME ZONE 'Asia/Kolkata')::date AS "day",
+            COUNT(*)::bigint AS "daily_count"
+          FROM "food_entries"
+          GROUP BY 1
+        )
+        SELECT
+          TO_CHAR("day", 'DD Mon YY') AS "label",
+          SUM("daily_count") OVER (ORDER BY "day")::bigint AS "value"
+        FROM daily
+        ORDER BY "day"
+      `,
     ]);
 
     const summary = summaryRows[0];
@@ -555,7 +552,10 @@ export class PrismaPlatformStore implements PlatformStore {
     const verifiedMap = new Map<string, number>();
     let scanAttempts = 0;
     for (const row of performanceGroups) {
-      const count = row._count._all;
+      const count =
+        row._count && typeof row._count !== "boolean"
+          ? (row._count._all ?? 0)
+          : 0;
       scanAttempts += count;
       attemptMap.set(
         row.volunteerId,
@@ -564,20 +564,10 @@ export class PrismaPlatformStore implements PlatformStore {
       if (row.successful) verifiedMap.set(row.volunteerId, count);
     }
 
-    const countsByDay = new Map<string, number>();
-    for (const entry of entries.reverse()) {
-      const label = entry.scannedAt.toLocaleDateString("en-IN", {
-        day: "2-digit",
-        month: "short",
-        timeZone: "Asia/Kolkata",
-      });
-      countsByDay.set(label, (countsByDay.get(label) ?? 0) + 1);
-    }
-    let cumulative = 0;
-    const cumulativeData = Array.from(countsByDay, ([label, count]) => {
-      cumulative += count;
-      return { label, value: cumulative };
-    });
+    const cumulativeData = cumulativeRows.map((row) => ({
+      label: row.label,
+      value: Number(row.value),
+    }));
 
     return {
       totals: {
@@ -599,7 +589,10 @@ export class PrismaPlatformStore implements PlatformStore {
         : null,
       collegeData: collegeGroups.map((row) => ({
         college: row.college,
-        count: row._count.id,
+        count:
+          row._count && typeof row._count !== "boolean"
+            ? (row._count.id ?? 0)
+            : 0,
       })),
       dayOverview: Array.from(dayMap.values()),
       heatmap,
