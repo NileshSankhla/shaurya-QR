@@ -9,7 +9,7 @@ export function CollegeDonut({ data }: { data: Array<{ college: string; count: n
   const remainder = data.slice(6).reduce((sum, item) => sum + item.count, 0)
   const chart = remainder ? [...top, { college: 'Others', count: remainder }] : top
   return (
-    <div className="rounded-3xl border border-[var(--color-surface-variant)] bg-white p-5 shadow-sm">
+    <div className="w-full min-w-0 rounded-3xl border border-[var(--color-surface-variant)] bg-white p-5 shadow-sm">
       <h3 className="font-bold">College distribution</h3>
       <p className="mb-4 text-xs text-[var(--color-on-surface-variant)]">{data.length} colleges represented</p>
       {chart.length === 0 ? <div className="flex h-52 items-center justify-center text-sm text-[var(--color-on-surface-variant)]">No participants yet.</div> : (

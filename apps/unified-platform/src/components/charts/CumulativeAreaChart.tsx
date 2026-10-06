@@ -4,7 +4,7 @@ import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YA
 
 export function CumulativeAreaChart({ data }: { data: Array<{ label: string; value: number }> }) {
   return (
-    <div className="rounded-3xl bg-[var(--color-primary)] p-5 text-white shadow-sm">
+    <div className="w-full min-w-0 rounded-3xl bg-[var(--color-primary)] p-5 text-white shadow-sm">
       <h3 className="font-bold">Cumulative verification</h3>
       <p className="mb-4 text-xs text-white/70">Running meal total over the latest 1,000 entries</p>
       {data.length === 0 ? <div className="flex h-52 items-center justify-center text-sm text-white/70">No verified meals yet.</div> : (

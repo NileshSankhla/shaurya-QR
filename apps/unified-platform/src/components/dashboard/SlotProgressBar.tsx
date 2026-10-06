@@ -11,7 +11,7 @@ export function SlotProgressBar({ slotName, served, total, isActive }: SlotProgr
   const pct = total > 0 ? Math.min(100, (served / total) * 100) : 0
   return (
     <div
-      className="rounded-3xl p-6 text-white shadow-lg relative overflow-hidden"
+      className="w-full min-w-0 rounded-3xl p-6 text-white shadow-lg relative overflow-hidden"
       style={{ background: 'linear-gradient(135deg, #964900 0%, #f58529 60%, #8639b4 100%)' }}
     >
       {/* Decorative background icon */}

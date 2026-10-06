@@ -134,7 +134,7 @@ export function AdminOverview({ data }: { data: AdminOverviewData }) {
         <CollegeDonut data={data.collegeData} />
       </div>
 
-      <section className="rounded-3xl border border-[var(--color-surface-variant)] bg-white p-5 shadow-sm">
+      <section className="w-full min-w-0 rounded-3xl border border-[var(--color-surface-variant)] bg-white p-5 shadow-sm">
         <div className="mb-4 flex flex-wrap items-start justify-between gap-2">
           <div>
             <h2 className="font-[family-name:var(--font-display)] text-lg font-black">

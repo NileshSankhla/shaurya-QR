@@ -13,7 +13,7 @@ export function SlotHeatmap({ data }: { data: Record<string, Record<string, numb
   const max = Math.max(1, ...days.flatMap((day) => meals.map((meal) => data[day][meal] ?? 0)))
 
   return (
-    <div className="rounded-3xl border border-[var(--color-surface-variant)] bg-white p-5 shadow-sm">
+    <div className="w-full min-w-0 rounded-3xl border border-[var(--color-surface-variant)] bg-white p-5 shadow-sm">
       <h3 className="font-bold">Slot heatmap</h3>
       <p className="mb-5 text-xs text-[var(--color-on-surface-variant)]">Darker cells have more verified meals</p>
       {days.length === 0 ? <div className="flex h-44 items-center justify-center text-sm text-[var(--color-on-surface-variant)]">No slot data yet.</div> : (

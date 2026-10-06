@@ -12,7 +12,7 @@ const COLORS: Record<string, string> = {
 export function DayOverviewChart({ data }: { data: Array<Record<string, string | number>> }) {
   const meals = Array.from(new Set(data.flatMap((row) => Object.keys(row).filter((key) => key !== 'day'))))
   return (
-    <div className="rounded-3xl border border-[var(--color-surface-variant)] bg-white p-5 shadow-sm">
+    <div className="w-full min-w-0 rounded-3xl border border-[var(--color-surface-variant)] bg-white p-5 shadow-sm">
       <h3 className="font-bold">Meals served by event day</h3>
       <p className="mb-4 text-xs text-[var(--color-on-surface-variant)]">Progressive slot totals</p>
       {data.length === 0 ? <Empty /> : (
