@@ -52,7 +52,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${montserrat.variable} ${roboto.variable} min-h-screen antialiased`}>
+      <body className={`${montserrat.variable} ${roboto.variable} min-h-screen antialiased overflow-x-hidden`}>
         {children}
         <PwaManager />
       </body>

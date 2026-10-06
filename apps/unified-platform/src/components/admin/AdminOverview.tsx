@@ -94,7 +94,7 @@ export function AdminOverview({ data }: { data: AdminOverviewData }) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full overflow-x-hidden">
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6">
         {METRICS.map(({ key, label, icon: Icon, color }) => (
           <div
