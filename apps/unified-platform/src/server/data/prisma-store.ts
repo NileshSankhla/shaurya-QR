@@ -874,6 +874,42 @@ export class PrismaPlatformStore implements PlatformStore {
       }
     }
   }
+  
+  async updateSlot(id: number, input: SlotInput) {
+    const eventDate = new Date(`${input.eventDate}T00:00:00.000Z`);
+    const startTime = new Date(input.startTime);
+    const endTime = new Date(input.endTime);
+    if ([eventDate, startTime, endTime].some((date) => Number.isNaN(date.getTime()))) {
+      throw new Error("Invalid slot date or time");
+    }
+    if (endTime <= startTime) throw new Error("End time must be after start time");
+
+    const title = input.title.trim();
+    const dayLabel = input.dayLabel.trim();
+    
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      try {
+        await prisma.$transaction(
+          async (tx) => {
+            const day = await tx.foodDay.upsert({
+              where: { eventDate },
+              update: { label: dayLabel },
+              create: { eventDate, label: dayLabel },
+            });
+            await tx.foodSlot.update({
+              where: { id },
+              data: { dayId: day.id, title, startTime, endTime },
+            });
+          },
+          { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
+        );
+        return;
+      } catch (error) {
+        const code = (error as { code?: string }).code;
+        if (code !== "P2034" || attempt === 1) throw error;
+      }
+    }
+  }
 
   async setSlotStatus(
     id: number,

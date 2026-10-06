@@ -244,6 +244,19 @@ export async function adminCreateSlotAction(input: SlotInput): Promise<Result> {
   }
 }
 
+export async function adminUpdateSlotAction(id: number, input: SlotInput): Promise<Result> {
+  try {
+    await requireSession(["ADMIN"]);
+    await platformStore.updateSlot(id, validateSlotInput(input));
+    revalidatePath("/admin/slots");
+    revalidatePath("/admin");
+    revalidatePath("/volunteer");
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, error: publicError(error) };
+  }
+}
+
 export async function adminSetSlotStatusAction(
   id: number,
   status: "SCHEDULED" | "ACTIVE" | "PAUSED" | "CLOSED",

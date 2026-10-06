@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { useTransition } from 'react'
+import { useTransition, useState, useEffect } from 'react'
 import {
   BarChart3,
   CalendarClock,
@@ -41,10 +41,48 @@ export function PortalShell({
 }) {
   const pathname = usePathname()
   const [pending, startTransition] = useTransition()
+  const [targetHref, setTargetHref] = useState<string | null>(null)
+  
+  useEffect(() => {
+    setTargetHref(null)
+  }, [pathname])
+  
   const nav = role === 'ADMIN' ? ADMIN_NAV : VOLUNTEER_NAV
 
   return (
     <div className="min-h-screen bg-[var(--color-surface)] text-[var(--color-on-surface)] md:grid md:grid-cols-[250px_1fr]">
+      {targetHref && (
+        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center p-4">
+          {/* Frosted glass background */}
+          <div className="absolute inset-0 bg-white/60 backdrop-blur-2xl transition-opacity animate-in fade-in duration-300" />
+          
+          {/* Subtle warm center glow */}
+          <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,rgba(245,133,41,0.12)_0%,transparent_60%)] animate-pulse mix-blend-multiply" />
+          
+          <div className="relative flex flex-col items-center animate-in fade-in zoom-in-95 duration-500">
+            <div className="relative mb-8 flex h-24 w-24 items-center justify-center">
+              {/* Premium outer glowing rings */}
+              <div className="absolute -inset-6 rounded-full bg-gradient-to-tr from-orange-400/20 to-purple-400/20 opacity-60 blur-xl animate-pulse" />
+              <div className="absolute inset-0 rounded-full border-4 border-orange-200/30 border-t-[#f58529] border-l-[#f58529] animate-[spin_3s_cubic-bezier(0.4,0,0.2,1)_infinite]" />
+              <div className="absolute inset-2 rounded-full border-4 border-purple-200/30 border-b-[#8639b4] border-r-[#8639b4] animate-[spin_2s_linear_infinite_reverse]" />
+              
+              {/* Center Logo Area */}
+              <div className="relative h-14 w-14 rounded-full bg-white shadow-xl shadow-orange-500/20 overflow-hidden flex items-center justify-center">
+                <Image src="/logo.png" alt="Loading" fill sizes="56px" className="object-contain p-2 animate-pulse" />
+              </div>
+            </div>
+            
+            <h3 className="font-[family-name:var(--font-display)] text-[11px] font-black tracking-[0.3em] uppercase text-slate-700">
+              Loading
+            </h3>
+            <div className="mt-3 flex gap-1.5 opacity-80">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#f58529] animate-bounce" style={{ animationDelay: '0ms' }} />
+              <span className="h-1.5 w-1.5 rounded-full bg-[#8639b4] animate-bounce" style={{ animationDelay: '150ms' }} />
+              <span className="h-1.5 w-1.5 rounded-full bg-[#f58529] animate-bounce" style={{ animationDelay: '300ms' }} />
+            </div>
+          </div>
+        </div>
+      )}
       <aside className="hidden md:flex sticky top-0 h-screen flex-col border-r border-[var(--color-surface-variant)] bg-white px-4 py-5">
         <Link href={role === 'ADMIN' ? '/admin' : '/volunteer'} className="flex items-center gap-3 px-2">
           <span className="relative h-11 w-11 overflow-hidden rounded-2xl bg-orange-50">
@@ -61,15 +99,20 @@ export function PortalShell({
         <nav className="mt-8 flex flex-col gap-1.5">
           {nav.map(({ href, label, icon: Icon }) => {
             const active = pathname === href || (href !== '/admin' && pathname.startsWith(`${href}/`))
+            const isTarget = targetHref === href
             return (
               <Link
                 key={href}
                 href={href}
+                onClick={(e) => {
+                  if (targetHref || pathname === href) e.preventDefault()
+                  else setTargetHref(href)
+                }}
                 className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold transition ${
                   active
                     ? 'bg-[var(--color-primary)] text-white shadow-lg shadow-orange-200'
                     : 'text-[var(--color-on-surface-variant)] hover:bg-orange-50 hover:text-[var(--color-primary)]'
-                }`}
+                } ${isTarget ? 'opacity-50 pointer-events-none' : ''}`}
               >
                 <Icon size={19} />
                 {label}
@@ -133,13 +176,18 @@ export function PortalShell({
         style={{ gridTemplateColumns: `repeat(${nav.length}, minmax(0, 1fr))` }}>
         {nav.map(({ href, label, icon: Icon }) => {
           const active = pathname === href || (href !== '/admin' && pathname.startsWith(`${href}/`))
+          const isTarget = targetHref === href
           return (
             <Link
               key={href}
               href={href}
+              onClick={(e) => {
+                if (targetHref || pathname === href) e.preventDefault()
+                else setTargetHref(href)
+              }}
               className={`flex min-h-16 flex-col items-center justify-center gap-1 text-[10px] font-bold ${
                 active ? 'text-[var(--color-primary)]' : 'text-[var(--color-on-surface-variant)]'
-              }`}
+              } ${isTarget ? 'opacity-50 pointer-events-none' : ''}`}
             >
               <Icon size={21} />
               {label}
