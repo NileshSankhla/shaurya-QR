@@ -22,6 +22,7 @@ import type {
   SortDirection,
 } from '@/server/data'
 import { QrCapture } from '@/components/volunteer/QrCapture'
+import { useNavigation } from '@/components/portal/PortalShell'
 
 export function UserManager({
   guests,
@@ -47,6 +48,7 @@ export function UserManager({
   direction: SortDirection
 }) {
   const router = useRouter()
+  const { navigate: globalNavigate } = useNavigation()
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
@@ -246,16 +248,16 @@ export function UserManager({
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <Link href={`/admin/users/${guest.id}`} className="font-bold hover:text-[var(--color-primary)] hover:underline">
+                    <a href={`/admin/users/${guest.id}`} onClick={(e) => { e.preventDefault(); globalNavigate(`/admin/users/${guest.id}`); }} className="font-bold hover:text-[var(--color-primary)] hover:underline">
                       {guest.name} {guest.qrToken ? `(${guest.qrToken})` : ''}
-                    </Link>
+                    </a>
                     <span className={`rounded-full px-2 py-0.5 text-[10px] font-black ${guest.active ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>{guest.active ? guest.status : 'REMOVED'}</span>
                   </div>
                   <p className="mt-1 text-xs text-[var(--color-on-surface-variant)]">{guest.college} · {guest.mobile} · {guest.email}</p>
                   <p className="mt-2 text-xs"><span className="font-bold text-[var(--color-primary)]">{guest.qrToken ?? 'No QR assigned'}</span> · {guest.mealsVerified} meals verified</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <Link href={`/admin/users/${guest.id}`} className="portal-small"><History size={14} /> History</Link>
+                  <a href={`/admin/users/${guest.id}`} onClick={(e) => { e.preventDefault(); globalNavigate(`/admin/users/${guest.id}`); }} className="portal-small"><History size={14} /> History</a>
                   <button type="button" disabled={pending} onClick={() => beginEdit(guest)} className="portal-small"><Pencil size={14} /> Edit</button>
                   {guest.active && !guest.qrToken && (
                     <button type="button" onClick={() => { setAssigning(assigning === guest.id ? null : guest.id); setEditing(null); setRemoveTarget(null) }} className="portal-small"><QrCode size={14} /> Assign</button>

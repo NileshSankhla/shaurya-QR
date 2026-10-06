@@ -6,10 +6,8 @@ import {
   BadgeCheck,
   ChevronLeft,
   ChevronRight,
-  CircleGauge,
   QrCode,
   ScanLine,
-  ShieldCheck,
   Users,
 } from "lucide-react";
 import { CollegeDonut } from "@/components/charts/CollegeDonut";
@@ -44,18 +42,6 @@ const METRICS = [
     label: "Scan attempts",
     icon: ScanLine,
     color: "text-orange-700 bg-orange-50",
-  },
-  {
-    key: "availableQrs",
-    label: "Reusable QRs",
-    icon: CircleGauge,
-    color: "text-cyan-700 bg-cyan-50",
-  },
-  {
-    key: "activeVolunteers",
-    label: "Active staff",
-    icon: ShieldCheck,
-    color: "text-pink-700 bg-pink-50",
   },
 ] as const;
 
@@ -95,7 +81,7 @@ export function AdminOverview({ data }: { data: AdminOverviewData }) {
 
   return (
     <div className="space-y-6 w-full overflow-x-hidden">
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {METRICS.map(({ key, label, icon: Icon, color }) => (
           <div
             key={key}

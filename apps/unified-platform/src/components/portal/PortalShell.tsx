@@ -2,8 +2,8 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { usePathname } from 'next/navigation'
-import { useTransition, useState, useEffect } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
+import { useTransition, useState, useEffect, createContext, useContext } from 'react'
 import {
   BarChart3,
   CalendarClock,
@@ -30,6 +30,15 @@ const VOLUNTEER_NAV = [
   { href: '/volunteer/verify', label: 'Verify food', icon: ScanLine },
 ]
 
+export const NavigationContext = createContext<{
+  navigate: (href: string) => void
+  targetHref: string | null
+}>({ navigate: () => {}, targetHref: null })
+
+export function useNavigation() {
+  return useContext(NavigationContext)
+}
+
 export function PortalShell({
   children,
   role,
@@ -40,12 +49,21 @@ export function PortalShell({
   name: string
 }) {
   const pathname = usePathname()
+  const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [targetHref, setTargetHref] = useState<string | null>(null)
   
   useEffect(() => {
     setTargetHref(null)
   }, [pathname])
+  
+  const navigate = (href: string) => {
+    if (targetHref || pathname === href) return
+    setTargetHref(href)
+    startTransition(() => {
+      router.push(href)
+    })
+  }
   
   const nav = role === 'ADMIN' ? ADMIN_NAV : VOLUNTEER_NAV
 
@@ -106,7 +124,10 @@ export function PortalShell({
                 href={href}
                 onClick={(e) => {
                   if (targetHref || pathname === href) e.preventDefault()
-                  else setTargetHref(href)
+                  else {
+                     // Allow normal Link navigation but set our targetHref to show the loader
+                     setTargetHref(href)
+                  }
                 }}
                 className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold transition ${
                   active
@@ -169,7 +190,9 @@ export function PortalShell({
           </div>
         </header>
 
-        <main className="mx-auto w-full max-w-7xl px-4 py-6 pb-24 md:px-8 md:py-8">{children}</main>
+        <NavigationContext.Provider value={{ navigate, targetHref }}>
+          <main className="mx-auto w-full max-w-7xl px-4 py-6 pb-24 md:px-8 md:py-8">{children}</main>
+        </NavigationContext.Provider>
       </div>
 
       <nav className="fixed inset-x-0 bottom-0 z-50 grid border-t border-[var(--color-surface-variant)] bg-white/95 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
