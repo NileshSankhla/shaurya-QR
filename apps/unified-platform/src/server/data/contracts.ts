@@ -226,6 +226,7 @@ export interface PlatformStore {
     }>
   >;
   createSlot(input: SlotInput): Promise<void>;
+  updateSlot(id: number, input: SlotInput): Promise<void>;
   setSlotStatus(
     id: number,
     status: "SCHEDULED" | "ACTIVE" | "PAUSED" | "CLOSED",
