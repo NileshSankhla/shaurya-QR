@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
-import { useTransition, useState, useEffect, createContext, useContext } from 'react'
+import { useTransition, useState, createContext, useContext } from 'react'
 import {
   BarChart3,
   CalendarClock,
@@ -30,10 +30,9 @@ const VOLUNTEER_NAV = [
   { href: '/volunteer/verify', label: 'Verify food', icon: ScanLine },
 ]
 
-export const NavigationContext = createContext<{
+const NavigationContext = createContext<{
   navigate: (href: string) => void
-  targetHref: string | null
-}>({ navigate: () => {}, targetHref: null })
+}>({ navigate: () => {} })
 
 export function useNavigation() {
   return useContext(NavigationContext)
@@ -52,13 +51,10 @@ export function PortalShell({
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [targetHref, setTargetHref] = useState<string | null>(null)
-  
-  useEffect(() => {
-    setTargetHref(null)
-  }, [pathname])
+  const activeTargetHref = targetHref === pathname ? null : targetHref
   
   const navigate = (href: string) => {
-    if (targetHref || pathname === href) return
+    if (activeTargetHref || pathname === href) return
     setTargetHref(href)
     startTransition(() => {
       router.push(href)
@@ -69,7 +65,7 @@ export function PortalShell({
 
   return (
     <div className="min-h-screen bg-[var(--color-surface)] text-[var(--color-on-surface)] md:grid md:grid-cols-[250px_1fr]">
-      {targetHref && (
+      {activeTargetHref && (
         <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center p-4">
           {/* Frosted glass background */}
           <div className="absolute inset-0 bg-white/60 backdrop-blur-2xl transition-opacity animate-in fade-in duration-300" />
@@ -117,13 +113,13 @@ export function PortalShell({
         <nav className="mt-8 flex flex-col gap-1.5">
           {nav.map(({ href, label, icon: Icon }) => {
             const active = pathname === href || (href !== '/admin' && pathname.startsWith(`${href}/`))
-            const isTarget = targetHref === href
+            const isTarget = activeTargetHref === href
             return (
               <Link
                 key={href}
                 href={href}
                 onClick={(e) => {
-                  if (targetHref || pathname === href) e.preventDefault()
+                  if (activeTargetHref || pathname === href) e.preventDefault()
                   else {
                      // Allow normal Link navigation but set our targetHref to show the loader
                      setTargetHref(href)
@@ -190,7 +186,7 @@ export function PortalShell({
           </div>
         </header>
 
-        <NavigationContext.Provider value={{ navigate, targetHref }}>
+        <NavigationContext.Provider value={{ navigate }}>
           <main className="mx-auto w-full max-w-7xl px-4 py-6 pb-24 md:px-8 md:py-8">{children}</main>
         </NavigationContext.Provider>
       </div>
@@ -199,13 +195,13 @@ export function PortalShell({
         style={{ gridTemplateColumns: `repeat(${nav.length}, minmax(0, 1fr))` }}>
         {nav.map(({ href, label, icon: Icon }) => {
           const active = pathname === href || (href !== '/admin' && pathname.startsWith(`${href}/`))
-          const isTarget = targetHref === href
+          const isTarget = activeTargetHref === href
           return (
             <Link
               key={href}
               href={href}
               onClick={(e) => {
-                if (targetHref || pathname === href) e.preventDefault()
+                if (activeTargetHref || pathname === href) e.preventDefault()
                 else setTargetHref(href)
               }}
               className={`flex min-h-16 flex-col items-center justify-center gap-1 text-[10px] font-bold ${
@@ -238,14 +234,6 @@ export function SectionHeading({
         <p className="mt-1 max-w-2xl text-sm text-[var(--color-on-surface-variant)]">{description}</p>
       </div>
       {action}
-    </div>
-  )
-}
-
-export function EmptyState({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="rounded-3xl border border-dashed border-[var(--color-outline-variant)] bg-white p-10 text-center text-sm text-[var(--color-on-surface-variant)]">
-      {children}
     </div>
   )
 }

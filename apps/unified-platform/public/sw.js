@@ -40,8 +40,7 @@ function isCacheableStaticAsset(url) {
   return (
     url.pathname.startsWith("/_next/static/") ||
     url.pathname.startsWith("/icons/") ||
-    url.pathname === "/logo.png" ||
-    url.pathname === "/profile.png"
+    url.pathname === "/logo.png"
   );
 }
 

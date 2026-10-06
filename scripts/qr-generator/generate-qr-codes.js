@@ -9,7 +9,6 @@ const { createObjectCsvWriter } = require("csv-writer");
 // ============================================================
 const TOTAL_QR = 500;
 const PREFIX = "SH26";
-const BASE_URL = "https://shaurya.iitkgp.ac.in/ticket/";
 const OUTPUT_DIR = path.join(__dirname, "shaurya-qr-codes");
 const QR_IMAGES_DIR = path.join(OUTPUT_DIR, "qr-images");
 const QR_OPTIONS = {
