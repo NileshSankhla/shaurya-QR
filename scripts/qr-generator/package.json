@@ -12,7 +12,6 @@
   "type": "commonjs",
   "dependencies": {
     "csv-writer": "^1.6.0",
-    "qrcode": "^1.5.4",
-    "uuid": "^14.0.2"
+    "qrcode": "^1.5.4"
   }
 }
