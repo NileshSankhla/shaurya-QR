@@ -917,6 +917,14 @@ export class PrismaPlatformStore implements PlatformStore {
   ) {
     await prisma.$transaction(async (tx) => {
       if (status === "ACTIVE") {
+        const slot = await tx.foodSlot.findUnique({ where: { id } });
+        if (!slot) throw new Error("Slot not found");
+        if (slot.endTime <= new Date()) {
+          throw new Error(
+            "This food slot has already ended. Please create or edit the schedule before starting it.",
+          );
+        }
+
         await tx.foodSlot.updateMany({
           where: { status: "ACTIVE", id: { not: id } },
           data: { status: "PAUSED" },
